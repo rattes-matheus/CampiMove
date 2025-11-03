@@ -10,6 +10,7 @@ import { Header } from '@/components/landing/header';
 import { Footer } from '@/components/landing/footer';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -26,8 +27,14 @@ export default function RegisterPage() {
       return;
     }
     setError('');
-    console.log('Tentativa de registro com:', { email, password, role });
-    // Esta é uma implementação estática. A lógica de registro precisa ser adicionada.
+    axios.post("http://localhost:8080/register", {
+        "email": email,
+        "password": password,
+        "role": role.toUpperCase()
+        });
+
+    localStorage.setItem("email", email);
+
     router.push('/verify-code');
   };
 
