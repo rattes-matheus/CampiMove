@@ -28,8 +28,7 @@ public class Transport {
 
     @NotBlank
     private String contact;
-
-    @NotNull
+    
     private boolean active;
 
     public Transport(String type, String model, String contact, Long capacity) {
