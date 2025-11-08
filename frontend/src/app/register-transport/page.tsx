@@ -23,6 +23,35 @@ export default function RegisterTransportPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const onlyDigits = phoneNumber.replace(/\D/g, '');
+    const onlyNumbers = capacity.replace(/\D/g, '');
+
+    if (!transportType) {
+      toast({
+        title: "Erro",
+        description: "Selecione o tipo de transporte.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (onlyNumbers.length === 0 || isNaN(Number(onlyNumbers))) {
+      toast({
+        title: "Capacidade inválida",
+        description: "A capacidade deve conter apenas números.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (onlyDigits.length !== 11) {
+      toast({
+        title: "Telefone inválido",
+        description: "O número deve conter exatamente 11 dígitos (DDD + número).",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const response = axios.post("http://localhost:8080/api/register-transport", {
       type: transportType,
@@ -31,10 +60,10 @@ export default function RegisterTransportPage() {
       contact: phoneNumber
     }).then(() => {
       toast({ title: "Sucesso", description: "Novo transporte cadastrado" });
-      
+
       console.log("Transport registered: " + response);
       router.push("/dashboard/motorist");
-      
+
     }).catch((err: any) => {
       toast({ title: 'Erro', description: 'Erro ao cadastrar novo transporte', variant: 'destructive' });
       console.log("Can't create a new transport: ", err.message);
@@ -84,7 +113,7 @@ export default function RegisterTransportPage() {
                       id="capacity"
                       value={capacity}
                       onChange={(e) => setCapacity(e.target.value)}
-                      placeholder="ex: 10 pessoas"
+                      placeholder="ex: 10"
                       required
                     />
                   </div>
@@ -95,7 +124,7 @@ export default function RegisterTransportPage() {
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="ex: (XX) XXXXX-XXXX"
+                      placeholder="ex: XXXXXXXXXXX"
                       required
                     />
                   </div>
