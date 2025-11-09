@@ -1,13 +1,13 @@
-package com.campimove.backand.services;
+package com.campimove.backend.service;
 
 import java.io.IOException;
 import java.util.Optional;
-import com.campimove.backand.dtos.EditProfileDTO;
-import com.campimove.backand.entities.User;
-import com.campimove.backand.entities.repositories.UserRepository;
+
+import com.campimove.backend.dto.EditProfileDTO;
+import com.campimove.backend.entity.User;
+import com.campimove.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class EditService {
@@ -31,15 +31,10 @@ public class EditService {
             user.setEmail(dto.getEmail());
         }
 
-        MultipartFile imagem = dto.getImagem();
-        if (imagem != null && !imagem.isEmpty()) {
-            String nomeArquivo = System.currentTimeMillis() + "_" + imagem.getOriginalFilename();
-            String caminho = "uploads/" + nomeArquivo;
-            imagem.transferTo(new java.io.File(caminho));
-
-            user.setImagemUrl(caminho); 
-        }
-
         return userRepository.save(user);
+    }
+
+    public Optional<User> buscarPorId(Long id) {
+        return userRepository.findById(id);
     }
 }

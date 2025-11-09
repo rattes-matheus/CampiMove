@@ -1,10 +1,3 @@
-/*
- * 
- *      ESSE ARQUIVO DE CONFIGURACAO FOI FEITO PARA DESENVOLVIMENTO LOCAL
- *              SENDO NECESSARIO ALTERAR ELE PARA PRODUCAO
- * 
- */
-
 package com.campimove.backend.config;
 
 import org.springframework.context.annotation.Bean;
@@ -26,25 +19,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            )
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             .csrf(csrf -> csrf.disable())
-            .cors(Customizer.withDefaults());
-
+            .cors(Customizer.withDefaults())
+            .httpBasic(httpBasic -> httpBasic.disable()) // desativa login HTTP Basic
+            .formLogin(form -> form.disable()); // desativa formulário padrão
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.setAllowedOrigins(List.of("*"));
-
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
         configuration.setAllowedHeaders(List.of("*"));
-
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

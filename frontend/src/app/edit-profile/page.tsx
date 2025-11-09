@@ -1,105 +1,118 @@
 'use client';
 
-import { DashboardHeader } from '@/components/dashboard/header';
-import { Footer } from '@/components/landing/footer';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useState } from 'react';
-import { Camera } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { DashboardHeader } from '@/components/dashboard/header';
+import { Footer } from '@/components/landing/footer';
+import { getUserId } from '@/lib/auth';
 
-export default function EditProfilePage() {
-  const { toast } = useToast();
-  const image = PlaceHolderImages.find(p => p.id === 'testimonial-1');
-  const [name, setName] = useState('Usuário');
-  const [email, setEmail] = useState('usuario@exemplo.com');
+export default function EditProfile() {
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [imagem, setImagem] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const handleSaveChanges = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Esta é uma implementação estática. A lógica de atualização de perfil precisa ser adicionada.
-    console.log('Salvando alterações:', { name, email });
-    toast({
-      title: 'Perfil Atualizado',
-      description: 'Suas alterações foram salvas com sucesso.',
-    });
+  useEffect(() => {
+    const id = getUserId();
+    setUserId(id);
+  }, []);
+
+  const handleImagemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImagem(file);
+      setPreview(URL.createObjectURL(file));
+    }
   };
 
-  const handleAvatarChange = () => {
-    // Esta é uma implementação estática. A lógica de upload de arquivo precisa ser adicionada.
-    toast({
-      title: 'Recurso não disponível',
-      description: 'O upload de avatar ainda não foi implementado.',
-      variant: 'destructive'
-    });
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!userId) {
+      alert('Usuário não identificado. Faça login novamente.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('nome', nome);
+    formData.append('email', email);
+    if (imagem) {
+      formData.append('imagem', imagem);
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/usuarios/${userId}/editar`, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao atualizar perfil');
+      }
+
+      const data = await response.json();
+      alert('Perfil atualizado com sucesso!');
+      console.log('Usuário atualizado:', data);
+    } catch (error) {
+      console.error('Erro ao editar perfil:', error);
+      alert('Ocorreu um erro ao atualizar o perfil.');
+    }
+  };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen">
       <DashboardHeader />
-      <main className="flex-grow container mx-auto px-4 md:px-6 py-8">
-        <div className="max-w-2xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>Editar Perfil</CardTitle>
-              <CardDescription>Atualize as informações da sua conta.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSaveChanges}>
-                <div className="grid gap-6">
-                  <div className="flex items-center gap-4">
-                     <div className="relative">
-                        <Avatar className="h-20 w-20">
-                          {image && <AvatarImage src={image.imageUrl} alt={image.description} data-ai-hint={image.imageHint} />}
-                          <AvatarFallback>U</AvatarFallback>
-                        </Avatar>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute bottom-0 right-0 rounded-full h-8 w-8 bg-background/50 hover:bg-background"
-                          onClick={handleAvatarChange}
-                        >
-                          <Camera className="h-4 w-4" />
-                          <span className="sr-only">Alterar avatar</span>
-                        </Button>
-                      </div>
-                    <div className="grid gap-1.5">
-                      <h3 className="text-lg font-semibold">{name}</h3>
-                      <p className="text-sm text-muted-foreground">{email}</p>
-                    </div>
-                  </div>
+      <main className="flex-1 flex justify-center items-center p-4 bg-gray-50">
+        <Card className="w-full max-w-md shadow-lg rounded-2xl">
+          <CardHeader>
+            <CardTitle>Editar Perfil</CardTitle>
+            <CardDescription>Atualize suas informações abaixo</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="flex flex-col items-center space-y-2">
+                <Avatar className="w-24 h-24">
+                  {preview ? (
+                    <AvatarImage src={preview} alt="Preview" />
+                  ) : (
+                    <AvatarFallback>IMG</AvatarFallback>
+                  )}
+                </Avatar>
+                <Input type="file" accept="image/*" onChange={handleImagemChange} />
+              </div>
 
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Nome</Label>
-                    <Input
-                      id="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="flex justify-end">
-                    <Button type="submit">Salvar Alterações</Button>
-                  </div>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+              <div>
+                <Label htmlFor="nome">Nome</Label>
+                <Input
+                  id="nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  placeholder="Digite seu nome"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Digite seu e-mail"
+                />
+              </div>
+
+              <Button type="submit" className="w-full">
+                Salvar Alterações
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </main>
       <Footer />
     </div>

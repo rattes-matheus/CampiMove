@@ -16,19 +16,19 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     ports:
-      - 8080:8080
+      - "8080:8080"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: ./Dockerfile
     container_name: campimove_frontend
-    ports:
-      - 3000:3000
     depends_on:
       - backend
     environment:
-      NEXT_PUBLIC_API_URL: "http://localhost:8080"
+      - NEXT_PUBLIC_API_URL=http://backend:8080
+    ports:
+      - "3000:3000"
 
   postgres:
     image: postgres:15
@@ -45,12 +45,12 @@ services:
   redis:
     image: redis:7
     container_name: redis-cache
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
-    command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
 
 volumes:
-  redis_data:
   pgdata:
+  redis_data:

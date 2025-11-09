@@ -1,9 +1,3 @@
-package com.campimove.backand.entities;
-
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
 @Entity
 @Table(name = "usuarios")
 @Getter
@@ -18,6 +12,8 @@ public class User {
 
     @Column(unique = true)
     private String email;
+
+    private String senha; 
 
     private String imagemUrl;
 }

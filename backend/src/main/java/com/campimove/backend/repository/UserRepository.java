@@ -1,9 +1,11 @@
-package com.campimove.backand.entities.repositories;
+package com.campimove.backend.repository;
 
-import java.util.Optional;
-import com.campimove.backand.entities.User;
+import com.campimove.backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
+@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 }
