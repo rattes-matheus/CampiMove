@@ -1,120 +1,167 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { DashboardHeader } from '@/components/dashboard/header';
-import { Footer } from '@/components/landing/footer';
-import { getUserId } from '@/lib/auth';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import styles from './editProfile.module.css'; 
 
-export default function EditProfile() {
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [imagem, setImagem] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+// --- CONSTANTES CONFIGURADAS ---
+const API_URL = 'http://localhost:8080';
+const CURRENT_USER_ID = 1;
+// -----------------------------
 
-  useEffect(() => {
-    const id = getUserId();
-    setUserId(id);
-  }, []);
+type User = {
+    id: number;
+    name: string;
+    email: string;
+    profilePictureUrl: string; 
+};
 
-  const handleImagemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImagem(file);
-      setPreview(URL.createObjectURL(file));
-    }
-  };
+export default function EditProfilePage() {
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
 
-    if (!userId) {
-      alert('Usuário não identificado. Faça login novamente.');
-      return;
-    }
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const response = await axios.get<User>(`${API_URL}/api/profile/${CURRENT_USER_ID}`); 
+                
+                setName(response.data.name);
+                setEmail(response.data.email);
+                
+                if (response.data.profilePictureUrl) {
+                    setPreviewImage(API_URL + response.data.profilePictureUrl);
+                }
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+                setMessage('Erro ao carregar dados do usuário.'); 
+            }
+        };
+        fetchUserData();
+    }, []);
 
-    const formData = new FormData();
-    formData.append('nome', nome);
-    formData.append('email', email);
-    if (imagem) {
-      formData.append('imagem', imagem);
-    }
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+            const file = event.target.files[0];
+            setSelectedFile(file);
+            setPreviewImage(URL.createObjectURL(file));
+        }
+    };
 
-    try {
-      const response = await fetch(`http://localhost:8080/api/usuarios/${userId}/editar`, {
-        method: 'PUT',
-        body: formData,
-      });
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setIsLoading(true);
+        setMessage('');
 
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar perfil');
-      }
+        const formData = new FormData();
 
-      const data = await response.json();
-      alert('Perfil atualizado com sucesso!');
-      console.log('Usuário atualizado:', data);
-    } catch (error) {
-      console.error('Erro ao editar perfil:', error);
-      alert('Ocorreu um erro ao atualizar o perfil.');
-    }
-  };
+        const profileData = { name, email };
+        formData.append(
+            'profileData',
+            new Blob([JSON.stringify(profileData)], { type: 'application/json' })
+        );
 
-  return (
-    <div className="flex flex-col min-h-screen">
-      <DashboardHeader />
-      <main className="flex-1 flex justify-center items-center p-4 bg-gray-50">
-        <Card className="w-full max-w-md shadow-lg rounded-2xl">
-          <CardHeader>
-            <CardTitle>Editar Perfil</CardTitle>
-            <CardDescription>Atualize suas informações abaixo</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex flex-col items-center space-y-2">
-                <Avatar className="w-24 h-24">
-                  {preview ? (
-                    <AvatarImage src={preview} alt="Preview" />
-                  ) : (
-                    <AvatarFallback>IMG</AvatarFallback>
-                  )}
-                </Avatar>
-                <Input type="file" accept="image/*" onChange={handleImagemChange} />
-              </div>
+        if (selectedFile) {
+            formData.append('profileImage', selectedFile);
+        }
 
-              <div>
-                <Label htmlFor="nome">Nome</Label>
-                <Input
-                  id="nome"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  placeholder="Digite seu nome"
-                />
-              </div>
+        try {
+            const response = await axios.put(
+                `${API_URL}/api/profile/${CURRENT_USER_ID}`, 
+                formData
+            );
 
-              <div>
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Digite seu e-mail"
-                />
-              </div>
+            setMessage('✅ Perfil atualizado com sucesso!');
+            
+            if (response.data.profilePictureUrl) {
+                setPreviewImage(API_URL + response.data.profilePictureUrl);
+            }
+            setSelectedFile(null);
 
-              <Button type="submit" className="w-full">
-                Salvar Alterações
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </main>
-      <Footer />
-    </div>
-  );
+        } catch (error) {
+            console.error('Erro ao atualizar perfil:', error);
+            setMessage('❌ Erro ao atualizar perfil. Verifique o console.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        
+        <div className={styles.container}>
+            <div className={styles.card}>
+                
+                <div className={styles.header}>
+                    <h2 className={styles.title}>Editar Perfil</h2>
+                    <p style={{ color: '#777', fontSize: '0.95rem' }}>Atualize as informações da sua conta e foto de perfil.</p>
+                </div>
+                
+                <div className={styles.userSummary}>
+                    {previewImage ? (
+                        <img 
+                            src={previewImage} 
+                            alt="Foto de Perfil" 
+                            className={styles.profileImage} 
+                        />
+                    ) : (
+                        <div className={styles.noPhotoImage}>
+                            Sem Foto
+                        </div>
+                    )}
+                    <div>
+                        
+                        <p style={{ fontWeight: 600 }}>{name || "Usuário"}</p>
+                        <p style={{ fontSize: '0.9rem', color: '#777' }}>{email || "usuario@exemplo.com"}</p>
+                    </div>
+                </div>
+
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="profileImage">Mudar foto:</label>
+                        <input
+                            type="file"
+                            id="profileImage"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                        />
+                        {selectedFile && <span style={{ fontSize: '0.85rem', color: '#008000' }}>Arquivo selecionado: {selectedFile.name}</span>}
+                    </div>
+
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="name">Nome:</label>
+                        <input
+                            type="text"
+                            id="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                        />
+                    </div>
+
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="email">Email:</label>
+                        <input
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </div>
+                    {message && (
+                        <p className={`${styles.message} ${message.startsWith('✅') ? styles.success : styles.error}`}>
+                            {message}
+                        </p>
+                    )}
+
+                    <button type="submit" className={styles.submitButton} disabled={isLoading}>
+                        {isLoading ? '💾 Salvando...' : 'Salvar Alterações'}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
 }

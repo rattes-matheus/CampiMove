@@ -22,8 +22,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
-            .httpBasic(httpBasic -> httpBasic.disable()) // desativa login HTTP Basic
-            .formLogin(form -> form.disable()); // desativa formulário padrão
+            .httpBasic(httpBasic -> httpBasic.disable()) 
+            .formLogin(form -> form.disable()); 
         return http.build();
     }
 

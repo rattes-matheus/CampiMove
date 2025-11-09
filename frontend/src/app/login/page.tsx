@@ -1,73 +1,83 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { saveUserSession } from '@/lib/auth';
-import axios from 'axios';
+import { useState } from 'react'
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
+  const [error, setError] = useState('')
+  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    console.log('Tentativa de login com:', { email, password });
+    e.preventDefault()
+    setError('')
 
     try {
       const response = await axios.post('http://localhost:8080/api/auth/login', {
-        email: email,
-        senha: password,
-      });
+        email,
+        senha,
+      })
 
-      console.log('Resposta do backend:', response.data);
+      const user = response.data
 
-      // salva o ID do usuário no localStorage
-      saveUserSession(response.data.userId);
+      localStorage.setItem('userId', user.id)
 
-      // redireciona para a página de editar perfil
-      router.push('/editar-perfil');
+      localStorage.setItem('userEmail', user.email)
+      localStorage.setItem('userName', user.nome)
+
+      alert('Login realizado com sucesso!')
+
+      router.push('/edit-profile')
     } catch (err: any) {
-      console.error('Erro no login:', err);
-      setError('Email ou senha inválidos');
+      console.error(err)
+      setError('E-mail ou senha inválidos.')
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
-      <form
-        onSubmit={handleLogin}
-        className="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm space-y-4"
-      >
-        <h1 className="text-2xl font-semibold text-center">Login</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
 
-        <Input
-          type="email"
-          placeholder="E-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">E-mail</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Digite seu e-mail"
+              className="w-full border rounded-lg p-2"
+              required
+            />
+          </div>
 
-        <Input
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          <div>
+            <label className="block text-sm font-medium mb-1">Senha</label>
+            <input
+              type="password"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              placeholder="Digite sua senha"
+              className="w-full border rounded-lg p-2"
+              required
+            />
+          </div>
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg"
+          >
+            Entrar
+          </button>
 
-        <Button type="submit" className="w-full">
-          Entrar
-        </Button>
-      </form>
+          {error && (
+            <p className="text-center text-red-600 text-sm mt-2">{error}</p>
+          )}
+        </form>
+      </div>
     </div>
-  );
+  )
 }
