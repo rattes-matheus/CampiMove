@@ -20,23 +20,34 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError('As senhas não coincidem');
       return;
     }
     setError('');
-    axios.post("http://localhost:8080/register", {
-        "email": email,
-        "password": password,
-        "role": role.toUpperCase()
-        });
+    try {
+        const response = await axios.post("http://localhost:8080/register", {
+                      "email": email,
+                      "password": password,
+                      "role": role.toUpperCase()});
 
-    localStorage.setItem("email", email);
-
-    router.push('/verify-code');
-  };
+        if (response.status === 200 || response.status === 201) {
+            setError('');
+            localStorage.setItem("email", email);
+            router.replace('/verify-code');
+            return;
+        }
+        }
+    catch(err) {
+        if (axios.isAxiosError(err) && err.response && err.response.data) {
+            const errorMessage = err.response.data.email || 'Erro no registro. Tente novamente';
+            setError(errorMessage);
+            }
+        else setError('Ocorreu um erro desconhecido.');
+}
+};
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -122,7 +133,9 @@ export default function RegisterPage() {
                     </div>
                   </RadioGroup>
                 </div>
-                {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+                {error && (
+                    <p className="text-sm font-medium text-destructive">{error}</p>
+                    )}
                 <Button type="submit" className="w-full">
                   Criar uma conta
                 </Button>
