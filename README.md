@@ -84,16 +84,16 @@ O **CampiMove** tem como objetivo melhorar a mobilidade para os campi do CEFET, 
 |    2   |   CSU02   |  Gabriela Pacheco    |
 |    1   |   CSU03   |  Matheus Rattes      |
 |    3   |   CSU04   |  Gabriela Pacheco    |
-|    2   |   CSU05   |  Bruno Frade         |
+|    1   |   CSU05   |  Bruno Frade         |
 |    2   |   CSU06   |  Matheus Rattes      |
 |    2   |   CSU07   |  Francisco Eduardo   |
 |    3   |   CSU08   |  Matheus Rattes      |
 |    3   |   CSU09   |  Francisco Eduardo   |
 |    1   |   CSU10   |  Pedro Peixoto       |
 |    2   |   CSU11   |  Matheus Rattes      |
-|    1   |   CSU12   |  Bruno Frade         |
+|    3   |   CSU12   |  Bruno Frade         |
 |    1   |   CSU13   |  Gabriela Pacheco    |
 |    2   |   CSU14   |  Pedro Peixoto       |
 |    3   |   CSU15   |  Pedro Peixoto       |
-|    3   |   CSU16   |  Bruno Frade         |
+|    2   |   CSU16   |  Bruno Frade         |
 

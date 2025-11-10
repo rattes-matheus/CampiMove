@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import axios from "axios";
 
 export default function RegisterTransportPage() {
   const { toast } = useToast();
@@ -18,16 +19,55 @@ export default function RegisterTransportPage() {
   const [transportType, setTransportType] = useState('');
   const [model, setModel] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [capacity, setCapacity] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Implementação estática
-    console.log({ transportType, model, phoneNumber });
-    toast({
-      title: 'Transporte Cadastrado',
-      description: 'Seu veículo foi cadastrado com sucesso.',
+    const onlyDigits = phoneNumber.replace(/\D/g, '');
+    const onlyNumbers = capacity.replace(/\D/g, '');
+
+    if (!transportType) {
+      toast({
+        title: "Erro",
+        description: "Selecione o tipo de transporte.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (onlyNumbers.length === 0 || isNaN(Number(onlyNumbers))) {
+      toast({
+        title: "Capacidade inválida",
+        description: "A capacidade deve conter apenas números.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (onlyDigits.length !== 11) {
+      toast({
+        title: "Telefone inválido",
+        description: "O número deve conter exatamente 11 dígitos (DDD + número).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const response = axios.post("http://localhost:8080/api/register-transport", {
+      type: transportType,
+      model: model,
+      capacity: capacity,
+      contact: phoneNumber
+    }).then(() => {
+      toast({ title: "Sucesso", description: "Novo transporte cadastrado" });
+
+      console.log("Transport registered: " + response);
+      router.push("/dashboard/motorist");
+
+    }).catch((err: any) => {
+      toast({ title: 'Erro', description: 'Erro ao cadastrar novo transporte', variant: 'destructive' });
+      console.log("Can't create a new transport: ", err.message);
     });
-    router.push('/dashboard/motorist');
   };
 
   return (
@@ -50,9 +90,10 @@ export default function RegisterTransportPage() {
                         <SelectValue placeholder="Selecione um tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="carpool">Carona</SelectItem>
-                        <SelectItem value="bike">Bicicleta</SelectItem>
-                        <SelectItem value="scooter">Patinete</SelectItem>
+                        <SelectItem value="Car">Carro</SelectItem>
+                        <SelectItem value="Bus">Ônibus</SelectItem>
+                        <SelectItem value="Bike">Motocicleta</SelectItem>
+                        <SelectItem value="Van">Van</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -67,13 +108,23 @@ export default function RegisterTransportPage() {
                     />
                   </div>
                   <div className="grid gap-2">
+                    <Label htmlFor="capacity">Capacidade do Veículo</Label>
+                    <Input
+                      id="capacity"
+                      value={capacity}
+                      onChange={(e) => setCapacity(e.target.value)}
+                      placeholder="ex: 10"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
                     <Label htmlFor="phone-number">Telefone de Contato</Label>
                     <Input
                       id="phone-number"
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="ex: (XX) XXXXX-XXXX"
+                      placeholder="ex: XXXXXXXXXXX"
                       required
                     />
                   </div>
