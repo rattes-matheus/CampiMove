@@ -29,11 +29,15 @@ public class EditProfileService {
         }
     }
 
+    public User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                             .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + userId));
+    }
+    
+
     @Transactional
-    public User updateUserProfile(Long userId, EditProfileDTO dto, MultipartFile file) {
-        
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + userId));
+    public User updateUserProfileData(Long userId, EditProfileDTO dto) {
+        User user = findUserById(userId);
 
         if (dto != null) {
             if (dto.name() != null && !dto.name().isBlank()) {
@@ -43,19 +47,33 @@ public class EditProfileService {
                 user.setEmail(dto.email());
             }
         }
-
-        if (file != null && !file.isEmpty()) {
-            String fileName = saveFile(file);
-            String fileAccessUrl = "/uploads/profile-pics/" + fileName;
-            user.setProfilePictureUrl(fileAccessUrl); 
-        }
-
+        
         return userRepository.save(user);
     }
 
+    @Transactional
+    public User updateUserProfilePicture(Long userId, MultipartFile file) {
+        User user = findUserById(userId);
+        
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("O arquivo de imagem está vazio ou ausente.");
+        }
+
+        String fileName = saveFile(file);
+        String fileAccessUrl = "/uploads/profile-pics/" + fileName; 
+        user.setProfilePictureUrl(fileAccessUrl); 
+
+        return userRepository.save(user);
+    }
+    
     private String saveFile(MultipartFile file) {
-        String fileExtension = file.getOriginalFilename() != null && file.getOriginalFilename().contains(".") ? 
-                              file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")) : "";
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null) {
+             originalFilename = "file";
+        }
+
+        String fileExtension = originalFilename.contains(".") ? 
+                               originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
         String fileName = UUID.randomUUID().toString() + fileExtension;
         
         Path targetLocation = this.fileStorageLocation.resolve(fileName);
@@ -66,10 +84,5 @@ public class EditProfileService {
         } catch (IOException ex) {
             throw new RuntimeException("Não foi possível salvar o arquivo " + fileName, ex);
         }
-    }
-
-    public User findUserById(Long userId) {
-        return userRepository.findById(userId)
-                             .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + userId));
     }
 }

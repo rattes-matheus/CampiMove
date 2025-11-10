@@ -1,167 +1,242 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState, useEffect, useCallback } from 'react';
+import { Camera, Save } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
-import styles from './editProfile.module.css'; 
 
-// --- CONSTANTES CONFIGURADAS ---
-const API_URL = 'http://localhost:8080';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
+const MOCK_AUTH_TOKEN = "Bearer MOCK_TOKEN_PARA_TESTE";
 const CURRENT_USER_ID = 1;
-// -----------------------------
+const GENERIC_AVATAR_PLACEHOLDER = 'https://placehold.co/80x80/6366f1/ffffff/png?text=US';
+
+const authHeaders = {
+    'Authorization': MOCK_AUTH_TOKEN,
+};
+
 
 type User = {
     id: number;
     name: string;
     email: string;
-    profilePictureUrl: string; 
+    profilePictureUrl: string | null;
 };
 
 export default function EditProfilePage() {
+    const { toast } = useToast();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewImage, setPreviewImage] = useState<string | null>(null);
-
+    const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [message, setMessage] = useState('');
+
+    const baseUrlForDisplay = API_URL.includes('backend') ? 'http://localhost:8080' : API_URL;
+    const fallbackImage = GENERIC_AVATAR_PLACEHOLDER;
+
+    const fetchUserData = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.get<User>(
+                `${API_URL}/api/profile/${CURRENT_USER_ID}`,
+                { headers: authHeaders }
+            );
+
+            setName(response.data.name);
+            setEmail(response.data.email);
+
+            if (response.data.profilePictureUrl) {
+                setCurrentImageUrl(baseUrlForDisplay + response.data.profilePictureUrl);
+            }
+        } catch (error) {
+            console.error('Erro ao buscar dados:', error);
+            toast({
+                title: 'Erro de Carregamento',
+                description: 'Não foi possível carregar os dados do perfil. Verifique a API e o Token.',
+                variant: 'destructive'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [baseUrlForDisplay, toast]); 
 
     useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const response = await axios.get<User>(`${API_URL}/api/profile/${CURRENT_USER_ID}`); 
-                
-                setName(response.data.name);
-                setEmail(response.data.email);
-                
-                if (response.data.profilePictureUrl) {
-                    setPreviewImage(API_URL + response.data.profilePictureUrl);
-                }
-            } catch (error) {
-                console.error('Erro ao buscar dados:', error);
-                setMessage('Erro ao carregar dados do usuário.'); 
-            }
-        };
         fetchUserData();
-    }, []);
+    }, [fetchUserData]);
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files[0]) {
-            const file = event.target.files[0];
-            setSelectedFile(file);
-            setPreviewImage(URL.createObjectURL(file));
-        }
-    };
-
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    const handleSaveChanges = async (e: React.FormEvent) => {
+        e.preventDefault();
         setIsLoading(true);
-        setMessage('');
-
-        const formData = new FormData();
 
         const profileData = { name, email };
-        formData.append(
-            'profileData',
-            new Blob([JSON.stringify(profileData)], { type: 'application/json' })
-        );
-
-        if (selectedFile) {
-            formData.append('profileImage', selectedFile);
-        }
 
         try {
             const response = await axios.put(
-                `${API_URL}/api/profile/${CURRENT_USER_ID}`, 
-                formData
+                `${API_URL}/api/profile/${CURRENT_USER_ID}`,
+                profileData,
+                { headers: authHeaders } 
             );
 
-            setMessage('✅ Perfil atualizado com sucesso!');
-            
-            if (response.data.profilePictureUrl) {
-                setPreviewImage(API_URL + response.data.profilePictureUrl);
-            }
-            setSelectedFile(null);
+           
+            setName(response.data.name);
+            setEmail(response.data.email);
 
+            toast({
+                title: 'Perfil Atualizado',
+                description: 'Suas alterações (nome/email) foram salvas com sucesso.',
+            });
         } catch (error) {
             console.error('Erro ao atualizar perfil:', error);
-            setMessage('❌ Erro ao atualizar perfil. Verifique o console.');
+            toast({
+                title: 'Erro ao Salvar',
+                description: 'Falha ao salvar. (401/403: Token? | 500: Erro do servidor?) Verifique o log do backend.',
+                variant: 'destructive'
+            });
         } finally {
             setIsLoading(false);
         }
     };
 
-    return (
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
         
-        <div className={styles.container}>
-            <div className={styles.card}>
-                
-                <div className={styles.header}>
-                    <h2 className={styles.title}>Editar Perfil</h2>
-                    <p style={{ color: '#777', fontSize: '0.95rem' }}>Atualize as informações da sua conta e foto de perfil.</p>
+        e.target.value = '';
+
+        if (!file) return;
+
+        setIsLoading(true);
+
+        const formData = new FormData();
+        formData.append('profileImage', file);
+
+        try {
+            
+            const response = await axios.put(
+                `${API_URL}/api/profile/${CURRENT_USER_ID}/picture`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': undefined, 
+                        'Authorization': MOCK_AUTH_TOKEN, 
+                    }
+                }
+            );
+
+            if (response.data.profilePictureUrl) {
+               
+                const newUrl = baseUrlForDisplay + response.data.profilePictureUrl + `?t=${Date.now()}`;
+                setCurrentImageUrl(newUrl);
+            }
+
+            toast({
+                title: 'Foto Atualizada',
+                description: 'Sua foto de perfil foi atualizada com sucesso.',
+            });
+        } catch (error) {
+            console.error('Erro ao fazer upload da foto:', error);
+            toast({
+                title: 'Erro no Upload',
+                description: 'Não foi possível fazer o upload da foto. O token de segurança está correto?',
+                variant: 'destructive'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    return (
+        <div className="flex flex-col min-h-screen bg-background">
+            <main className="flex-grow container mx-auto px-4 md:px-6 py-8">
+                <div className="max-w-2xl mx-auto">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Editar Perfil</CardTitle>
+                            <CardDescription>Atualize as informações da sua conta e foto de perfil.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleSaveChanges}>
+                                <div className="grid gap-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            <Avatar className="h-20 w-20">
+                                                <AvatarImage
+                                                    src={currentImageUrl || fallbackImage}
+                                                    alt="Foto de Perfil"
+                                                    onError={(e) => {
+                                                        const target = e.target as HTMLImageElement;
+                                                        if (target.src !== fallbackImage) {
+                                                            target.src = fallbackImage;
+                                                        }
+                                                    }}
+                                                />
+                                                <AvatarFallback>
+                                                    {name ? name[0].toUpperCase() : 'U'}
+                                                </AvatarFallback>
+                                            </Avatar>
+
+                                            
+                                            <label
+                                                htmlFor="avatar-upload"
+                                                className="absolute bottom-0 right-0 cursor-pointer rounded-full h-8 w-8 bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
+                                                title="Alterar foto de perfil"
+                                            >
+                                                <Camera className="h-4 w-4" />
+                                                <span className="sr-only">Alterar avatar</span>
+                                            </label>
+                                            <Input
+                                                id="avatar-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleAvatarChange}
+                                                className="hidden"
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+                                        <div className="grid gap-1.5">
+                                            <h3 className="text-lg font-semibold">{name || "Carregando..."}</h3>
+                                            <p className="text-sm text-muted-foreground">{email || "Carregando..."}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="name">Nome</Label>
+                                        <Input
+                                            id="name"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            required
+                                            disabled={isLoading}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="email">Email</Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                            disabled={isLoading}
+                                        />
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <Button type="submit" disabled={isLoading}>
+                                            {isLoading ? (
+                                                <>Salvando...</>
+                                            ) : (
+                                                <><Save className="mr-2 h-4 w-4" /> Salvar Alterações</>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
                 </div>
-                
-                <div className={styles.userSummary}>
-                    {previewImage ? (
-                        <img 
-                            src={previewImage} 
-                            alt="Foto de Perfil" 
-                            className={styles.profileImage} 
-                        />
-                    ) : (
-                        <div className={styles.noPhotoImage}>
-                            Sem Foto
-                        </div>
-                    )}
-                    <div>
-                        
-                        <p style={{ fontWeight: 600 }}>{name || "Usuário"}</p>
-                        <p style={{ fontSize: '0.9rem', color: '#777' }}>{email || "usuario@exemplo.com"}</p>
-                    </div>
-                </div>
-
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="profileImage">Mudar foto:</label>
-                        <input
-                            type="file"
-                            id="profileImage"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                        />
-                        {selectedFile && <span style={{ fontSize: '0.85rem', color: '#008000' }}>Arquivo selecionado: {selectedFile.name}</span>}
-                    </div>
-
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="name">Nome:</label>
-                        <input
-                            type="text"
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                        />
-                    </div>
-
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="email">Email:</label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-                    </div>
-                    {message && (
-                        <p className={`${styles.message} ${message.startsWith('✅') ? styles.success : styles.error}`}>
-                            {message}
-                        </p>
-                    )}
-
-                    <button type="submit" className={styles.submitButton} disabled={isLoading}>
-                        {isLoading ? '💾 Salvando...' : 'Salvar Alterações'}
-                    </button>
-                </form>
-            </div>
+            </main>
         </div>
     );
 }
