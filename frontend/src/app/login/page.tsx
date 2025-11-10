@@ -1,83 +1,86 @@
-'use client'
 
-import { useState } from 'react'
-import axios from 'axios'
-import { useRouter } from 'next/navigation'
+'use client';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { useState } from 'react';
+import { Header } from '@/components/landing/header';
+import { Footer } from '@/components/landing/footer';
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-
-    try {
-      const response = await axios.post('http://localhost:8080/api/auth/login', {
-        email,
-        senha,
-      })
-
-      const user = response.data
-
-      localStorage.setItem('userId', user.id)
-
-      localStorage.setItem('userEmail', user.email)
-      localStorage.setItem('userName', user.nome)
-
-      alert('Login realizado com sucesso!')
-
-      router.push('/edit-profile')
-    } catch (err: any) {
-      console.error(err)
-      setError('E-mail ou senha inválidos.')
-    }
-  }
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    console.log('Tentativa de login com:', { email, password });
+    // Esta é uma implementação estática. A lógica de autenticação precisa ser adicionada.
+    router.push('/dashboard');
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">E-mail</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Digite seu e-mail"
-              className="w-full border rounded-lg p-2"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Senha</label>
-            <input
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              placeholder="Digite sua senha"
-              className="w-full border rounded-lg p-2"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg"
-          >
-            Entrar
-          </button>
-
-          {error && (
-            <p className="text-center text-red-600 text-sm mt-2">{error}</p>
-          )}
-        </form>
-      </div>
+    <div className="flex flex-col min-h-screen bg-background">
+      <Header />
+      <main className="flex-grow flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Entrar</CardTitle>
+            <CardDescription>Insira suas credenciais para acessar sua conta.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin}>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@exemplo.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <div className="flex items-center">
+                    <Label htmlFor="password">Senha</Label>
+                    <Link
+                      href="/forgot-password"
+                      className="ml-auto inline-block text-sm underline"
+                    >
+                      Esqueceu sua senha?
+                    </Link>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+                <Button type="submit" className="w-full">
+                  Entrar
+                </Button>
+              </div>
+              <div className="mt-4 text-center text-sm">
+                Não tem uma conta?{' '}
+                <Link href="/register" className="underline">
+                  Cadastre-se
+                </Link>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </main>
+      <Footer />
     </div>
-  )
+  );
 }
