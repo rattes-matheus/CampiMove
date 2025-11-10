@@ -1,7 +1,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import BusSchedule from '@/lib/interfaces/BusSchedule';
+
+import { useEffect, useState } from 'react';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { Footer } from '@/components/landing/footer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,7 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
   DialogTrigger,
   DialogClose,
@@ -22,12 +23,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, UserX, PlusCircle, ShieldX, CheckCircle } from 'lucide-react';
-
-const initialSchedules = [
-  { id: 'sch-1', route: 'Campus I -> Campus II', time: '12:30' },
-  { id: 'sch-2', route: 'Campus II -> Campus I', time: '13:00' },
-  { id: 'sch-3', route: 'Campus I -> Reitoria', time: '14:00' },
-];
+import axios from "axios";
 
 const initialUsers = [
   { id: 'user-1', name: 'João da Silva', email: 'joao.silva@exemplo.com' },
@@ -42,27 +38,52 @@ const initialReports = [
 
 export default function AdminDashboardPage() {
   const { toast } = useToast();
-  const [schedules, setSchedules] = useState(initialSchedules);
+  const [schedules, setSchedules] = useState<BusSchedule[]>([]);
   const [users, setUsers] = useState(initialUsers);
   const [reports, setReports] = useState(initialReports);
   const [notification, setNotification] = useState('');
   const [newRoute, setNewRoute] = useState('');
   const [newTime, setNewTime] = useState('');
+  const [modified, setModified] = useState(0);
+
+  useEffect(() => {
+    axios.get<BusSchedule[]>("http://localhost:8080/api/routes").then((res) => {
+      setSchedules(res.data)
+    }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
+  }, [modified]);
 
   const handleAddSchedule = () => {
     if (newRoute && newTime) {
-      setSchedules([...schedules, { id: `sch-${Date.now()}`, route: newRoute, time: newTime }]);
-      toast({ title: 'Sucesso', description: 'Novo horário adicionado.' });
-      setNewRoute('');
-      setNewTime('');
+      axios.post("http://localhost:8080/api/routes", {
+        route: newRoute,
+        schedule: newTime + ":00"
+      }).then(() => {
+        toast({ title: 'Sucesso', description: 'Novo horário adicionado.' });
+        setModified(modified+1);
+      }).catch((err: Error) => {
+          toast({ title: 'Erro', description: 'Erro ao criar o novo horario de Intercampi', variant: 'destructive' });  
+          console.log("Can't create a new Bus Schedule : ", err.message);
+        }
+      ).finally(() => {
+        setNewRoute('');
+        setNewTime('');
+      });
     } else {
       toast({ title: 'Erro', description: 'Preencha a rota e o horário.', variant: 'destructive' });
     }
   };
 
-  const handleRemoveSchedule = (id: string) => {
-    setSchedules(schedules.filter(s => s.id !== id));
-    toast({ title: 'Sucesso', description: 'Horário removido.' });
+  const handleRemoveSchedule = (id: number) => {
+    axios.post("http://localhost:8080/api/routes/delete", {
+      id: id
+    }).then(() => {
+      toast({ title: 'Sucesso', description: 'Horário removido.' })
+      setModified(modified+1);
+    })
+    .catch((err) => {
+        toast({ title: 'Erro', description: 'Erro ao deletar o horario de Intercampi', variant: 'destructive' });  
+        console.log("Can't delete the Bus Schedule : ", err.message);
+    })
   };
   
   const handleDismissReport = (id: string) => {
@@ -142,7 +163,7 @@ export default function AdminDashboardPage() {
                   {schedules.map(schedule => (
                     <TableRow key={schedule.id}>
                       <TableCell>{schedule.route}</TableCell>
-                      <TableCell>{schedule.time}</TableCell>
+                      <TableCell>{schedule.schedule}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => handleRemoveSchedule(schedule.id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
