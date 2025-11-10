@@ -1,75 +1,203 @@
 'use client';
-
-import { DashboardHeader } from '@/components/dashboard/header';
-import { Footer } from '@/components/landing/footer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useState } from 'react';
-import { Camera } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Camera, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import axios from 'axios';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
+const MOCK_AUTH_TOKEN = "Bearer MOCK_TOKEN_PARA_TESTE";
+const CURRENT_USER_ID = 1;
+const GENERIC_AVATAR_PLACEHOLDER = 'https://placehold.co/80x80/6366f1/ffffff/png?text=US';
+
+const authHeaders = {
+  'Authorization': MOCK_AUTH_TOKEN,
+};
+
+
+type User = {
+  id: number;
+  name: string;
+  email: string;
+  profilePictureUrl: string | null;
+};
 
 export default function EditProfilePage() {
   const { toast } = useToast();
-  const image = PlaceHolderImages.find(p => p.id === 'testimonial-1');
-  const [name, setName] = useState('Usuário');
-  const [email, setEmail] = useState('usuario@exemplo.com');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSaveChanges = (e: React.FormEvent) => {
+  const baseUrlForDisplay = API_URL.includes('backend') ? 'http://localhost:8080' : API_URL;
+  const fallbackImage = GENERIC_AVATAR_PLACEHOLDER;
+
+  const fetchUserData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get<User>(
+        `${API_URL}/api/profile/${CURRENT_USER_ID}`,
+        { headers: authHeaders }
+      );
+
+      setName(response.data.name);
+      setEmail(response.data.email);
+
+      if (response.data.profilePictureUrl) {
+        setCurrentImageUrl(baseUrlForDisplay + response.data.profilePictureUrl);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error);
+      toast({
+        title: 'Erro de Carregamento',
+        description: 'Não foi possível carregar os dados do perfil. Verifique a API e o Token.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [baseUrlForDisplay, toast]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
+
+  const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Esta é uma implementação estática. A lógica de atualização de perfil precisa ser adicionada.
-    console.log('Salvando alterações:', { name, email });
-    toast({
-      title: 'Perfil Atualizado',
-      description: 'Suas alterações foram salvas com sucesso.',
-    });
+    setIsLoading(true);
+
+    const profileData = { name, email };
+
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/profile/${CURRENT_USER_ID}`,
+        profileData,
+        { headers: authHeaders }
+      );
+
+
+      setName(response.data.name);
+      setEmail(response.data.email);
+
+      toast({
+        title: 'Perfil Atualizado',
+        description: 'Suas alterações (nome/email) foram salvas com sucesso.',
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      toast({
+        title: 'Erro ao Salvar',
+        description: 'Falha ao salvar. (401/403: Token? | 500: Erro do servidor?) Verifique o log do backend.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleAvatarChange = () => {
-    // Esta é uma implementação estática. A lógica de upload de arquivo precisa ser adicionada.
-    toast({
-      title: 'Recurso não disponível',
-      description: 'O upload de avatar ainda não foi implementado.',
-      variant: 'destructive'
-    });
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    e.target.value = '';
+
+    if (!file) return;
+
+    setIsLoading(true);
+
+    const formData = new FormData();
+    formData.append('profileImage', file);
+
+    try {
+
+      const response = await axios.put(
+        `${API_URL}/api/profile/${CURRENT_USER_ID}/picture`,
+        formData,
+        {
+          headers: {
+            'Content-Type': undefined,
+            'Authorization': MOCK_AUTH_TOKEN,
+          }
+        }
+      );
+
+      if (response.data.profilePictureUrl) {
+
+        const newUrl = baseUrlForDisplay + response.data.profilePictureUrl + `?t=${Date.now()}`;
+        setCurrentImageUrl(newUrl);
+      }
+
+      toast({
+        title: 'Foto Atualizada',
+        description: 'Sua foto de perfil foi atualizada com sucesso.',
+      });
+    } catch (error) {
+      console.error('Erro ao fazer upload da foto:', error);
+      toast({
+        title: 'Erro no Upload',
+        description: 'Não foi possível fazer o upload da foto. O token de segurança está correto?',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <DashboardHeader />
       <main className="flex-grow container mx-auto px-4 md:px-6 py-8">
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardHeader>
               <CardTitle>Editar Perfil</CardTitle>
-              <CardDescription>Atualize as informações da sua conta.</CardDescription>
+              <CardDescription>Atualize as informações da sua conta e foto de perfil.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSaveChanges}>
                 <div className="grid gap-6">
                   <div className="flex items-center gap-4">
-                     <div className="relative">
-                        <Avatar className="h-20 w-20">
-                          {image && <AvatarImage src={image.imageUrl} alt={image.description} data-ai-hint={image.imageHint} />}
-                          <AvatarFallback>U</AvatarFallback>
-                        </Avatar>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute bottom-0 right-0 rounded-full h-8 w-8 bg-background/50 hover:bg-background"
-                          onClick={handleAvatarChange}
-                        >
-                          <Camera className="h-4 w-4" />
-                          <span className="sr-only">Alterar avatar</span>
-                        </Button>
-                      </div>
+                    <div className="relative">
+                      <Avatar className="h-20 w-20">
+                        <AvatarImage
+                          src={currentImageUrl || fallbackImage}
+                          alt="Foto de Perfil"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (target.src !== fallbackImage) {
+                              target.src = fallbackImage;
+                            }
+                          }}
+                        />
+                        <AvatarFallback>
+                          {name ? name[0].toUpperCase() : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+
+
+                      <label
+                        htmlFor="avatar-upload"
+                        className="absolute bottom-0 right-0 cursor-pointer rounded-full h-8 w-8 bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
+                        title="Alterar foto de perfil"
+                      >
+                        <Camera className="h-4 w-4" />
+                        <span className="sr-only">Alterar avatar</span>
+                      </label>
+                      <Input
+                        id="avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                        disabled={isLoading}
+                      />
+                    </div>
                     <div className="grid gap-1.5">
-                      <h3 className="text-lg font-semibold">{name}</h3>
-                      <p className="text-sm text-muted-foreground">{email}</p>
+                      <h3 className="text-lg font-semibold">{name || "Carregando..."}</h3>
+                      <p className="text-sm text-muted-foreground">{email || "Carregando..."}</p>
                     </div>
                   </div>
 
@@ -80,6 +208,7 @@ export default function EditProfilePage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -90,10 +219,17 @@ export default function EditProfilePage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="flex justify-end">
-                    <Button type="submit">Salvar Alterações</Button>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? (
+                        <>Salvando...</>
+                      ) : (
+                        <><Save className="mr-2 h-4 w-4" /> Salvar Alterações</>
+                      )}
+                    </Button>
                   </div>
                 </div>
               </form>
@@ -101,7 +237,6 @@ export default function EditProfilePage() {
           </Card>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }
