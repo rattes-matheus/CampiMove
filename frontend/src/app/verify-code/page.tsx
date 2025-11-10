@@ -4,20 +4,42 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from 'react';
 import { Header } from '@/components/landing/header';
 import { Footer } from '@/components/landing/footer';
 import Link from "next/link";
+import axios from "axios";
+import { useEffect, useState } from 'react';
+import { useRouter } from "next/navigation"
 
 export default function VerifyCodePage() {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
+  const router = useRouter();
 
-  const handleVerify = (e: React.FormEvent) => {
+  useEffect(() => {
+      const storedEmail = localStorage.getItem("email");
+      if (storedEmail) setEmail(storedEmail);
+      else router.push("/register");
+  }, [router]);
+
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('Esta é uma implementação estática. A lógica de verificação precisa ser adicionada.');
     console.log('Tentativa de verificação com código:', code);
-  };
+
+    try {
+        const response = await axios.post("http://localhost:8080/verify-code", {
+        "email": email,
+        "code": code,
+        });
+
+    if (response.status === 200) {
+        router.push("/login")
+    }
+
+    }catch (err) {
+        setError("Codigo invalido")}
+    };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

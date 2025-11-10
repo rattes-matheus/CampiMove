@@ -8,13 +8,21 @@ services:
       - postgres
       - redis
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=campimove_api
-      - DB_USER=postgres
-      - DB_PASS=admin
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/campimove_api
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=campimove@gmail.com
+      - SPRING_MAIL_PASSWORD=yjewagawctdcepyc
+
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
     ports:
       - 8080:8080
 
