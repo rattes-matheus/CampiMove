@@ -1,9 +1,9 @@
-package com.campimove.backend.controller;
+package com.campimove.backend.controllers;
 
 import com.campimove.backend.dto.EditProfileDTO;
 import com.campimove.backend.dto.UserResponseDTO;
-import com.campimove.backend.entity.User;
-import com.campimove.backend.service.EditProfileService;
+import com.campimove.backend.entities.User;
+import com.campimove.backend.services.EditProfileService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

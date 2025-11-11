@@ -21,20 +21,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-            .csrf(csrf -> csrf.disable())
-            .cors(Customizer.withDefaults())
-            .httpBasic(httpBasic -> httpBasic.disable()) 
-            .formLogin(form -> form.disable()); 
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .formLogin(form -> form.disable());
+
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOriginPatterns(List.of("*")); // ✅ allows all origins
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true); // optional; set to false if you don't need cookies
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

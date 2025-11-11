@@ -1,8 +1,8 @@
-package com.campimove.backend.service;
+package com.campimove.backend.services;
 
 import com.campimove.backend.dto.EditProfileDTO;
-import com.campimove.backend.entity.User;
-import com.campimove.backend.repository.UserRepository;
+import com.campimove.backend.entities.User;
+import com.campimove.backend.repositories.UserRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -74,7 +74,7 @@ public class EditProfileService {
 
         String fileExtension = originalFilename.contains(".") ? 
                                originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
-        String fileName = UUID.randomUUID().toString() + fileExtension;
+        String fileName = UUID.randomUUID() + fileExtension;
         
         Path targetLocation = this.fileStorageLocation.resolve(fileName);
         

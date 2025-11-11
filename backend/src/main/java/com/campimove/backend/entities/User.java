@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.campimove.backend.entities.Role;
 
 @Getter
 @Setter
@@ -35,6 +34,9 @@ public class User {
 
     @Column(name = "active")
     private boolean active;
+
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
 
     public User(String email, String password, Role role) {
         this.name = email.split("@")[0];
