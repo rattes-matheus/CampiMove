@@ -1,4 +1,4 @@
-package com.campimove.backend.dto;
+package com.campimove.backend.dtos;
 
 public record EditProfileDTO(
     String name,

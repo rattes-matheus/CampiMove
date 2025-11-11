@@ -1,4 +1,4 @@
-package com.campimove.backend.entities.IntercampiRoute;
+package com.campimove.backend.entities;
 
 import java.time.LocalTime;
 

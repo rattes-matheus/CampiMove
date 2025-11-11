@@ -1,4 +1,4 @@
-package com.campimove.backend.entities.transport;
+package com.campimove.backend.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

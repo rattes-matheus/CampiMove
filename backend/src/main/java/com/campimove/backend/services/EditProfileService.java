@@ -1,6 +1,6 @@
 package com.campimove.backend.services;
 
-import com.campimove.backend.dto.EditProfileDTO;
+import com.campimove.backend.dtos.EditProfileDTO;
 import com.campimove.backend.entities.User;
 import com.campimove.backend.repositories.UserRepository;
 

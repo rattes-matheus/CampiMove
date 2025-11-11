@@ -1,8 +1,8 @@
-package com.campimove.backend.controller;
+package com.campimove.backend.controllers;
 
-import com.campimove.backend.dto.RegisterTransportDTO;
-import com.campimove.backend.entities.transport.Transport;
-import com.campimove.backend.entities.transport.TransportRepository;
+import com.campimove.backend.dtos.RegisterTransportDTO;
+import com.campimove.backend.entities.Transport;
+import com.campimove.backend.repositories.TransportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
