@@ -1,7 +1,7 @@
 package com.campimove.backend.service;
 
 import com.campimove.backend.dto.EditProfileDTO;
-import com.campimove.backend.entity.User;
+import com.campimove.backend.entities.User;
 import com.campimove.backend.repository.UserRepository;
 
 import org.springframework.stereotype.Service;
