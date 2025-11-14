@@ -16,10 +16,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+import axios from 'axios';
 
 export const transportOptions = [
   {
-    id: 'ride-1',
+    id: 1,
     motorist: 'João da Silva',
     transportType: 'Carpool',
     rating: 4.5,
@@ -27,7 +28,7 @@ export const transportOptions = [
     avatarId: 'motorist-1',
   },
   {
-    id: 'ride-2',
+    id: 2,
     motorist: 'Maria Souza',
     transportType: 'Bike',
     rating: 5,
@@ -35,15 +36,15 @@ export const transportOptions = [
     avatarId: 'motorist-2',
   },
   {
-    id: 'ride-3',
+    id: 3,
     motorist: 'Samuel Wilson',
     transportType: 'Scooter',
     rating: 4.0,
     price: 8,
     avatarId: 'motorist-3',
   },
-    {
-    id: 'ride-4',
+  {
+    id: 4,
     motorist: 'Emily Brown',
     transportType: 'Carpool',
     rating: 4.8,
@@ -68,25 +69,23 @@ export default function FindARidePage() {
   const [reportReason, setReportReason] = useState('');
   const { toast } = useToast();
 
-  const handleReportSubmit = () => {
-    if (selectedMotorist && reportReason.trim()) {
-      console.log(`Denunciando motorista ${selectedMotorist.motorist} por: ${reportReason}`);
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    axios.post("http://localhost:8080/api/send-report", {
+      userid: selectedMotorist?.id,
+      report_text: reportReason,
+    }).then(() => {
       toast({
-        title: 'Denúncia Enviada',
-        description: `Sua denúncia sobre ${selectedMotorist.motorist} foi enviada para análise.`,
+        title: "Denúncia registrada",
+        description: `Sua denúncia contra ${selectedMotorist?.motorist} foi recebida com sucesso. Obrigado por ajudar a manter o app seguro.`,
       });
-      setReportReason('');
+      setReportReason("");
       setSelectedMotorist(null);
-      // Close dialog by returning true if you control it via an `open` prop
-      return true;
-    } else {
-       toast({
-        title: 'Erro na Denúncia',
-        description: 'Por favor, preencha o motivo da denúncia.',
-        variant: 'destructive',
-      });
-      return false;
-    }
+    }).catch((err: any) => {
+      toast({ title: 'Erro', description: 'Erro ao denunciar motorista', variant: 'destructive' });
+      console.log("Can't report driver: ", err.message);
+    });
   };
 
   const filteredTransport = transportOptions.filter((option) => {
@@ -144,17 +143,17 @@ export default function FindARidePage() {
               <div className="grid gap-6">
                 {filteredTransport.length > 0 ? (
                   filteredTransport.map((option) => {
-                     const image = images[option.avatarId];
-                     return (
+                    const image = images[option.avatarId];
+                    return (
                       <Card key={option.id} className="transition-shadow hover:shadow-md">
                         <CardContent className="p-4 flex items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
-                             {image && (
+                            {image && (
                               <Avatar className="h-14 w-14">
-                                  <AvatarImage src={image.imageUrl} alt={image.description} data-ai-hint={image.imageHint}/>
-                                  <AvatarFallback>{option.motorist.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                <AvatarImage src={image.imageUrl} alt={image.description} data-ai-hint={image.imageHint} />
+                                <AvatarFallback>{option.motorist.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                               </Avatar>
-                             )}
+                            )}
                             <div>
                               <h3 className="font-semibold text-lg">{option.motorist}</h3>
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -165,35 +164,35 @@ export default function FindARidePage() {
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="flex flex-col items-end gap-2">
-                                <div className="flex items-center gap-1">
-                                    <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                                    <span className="font-bold">{option.rating.toFixed(1)}</span>
-                                </div>
-                                <Button size="sm" asChild>
-                                    <Link href={`/chat/${option.id}`}>Reservar Agora</Link>
-                                </Button>
+                              <div className="flex items-center gap-1">
+                                <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                                <span className="font-bold">{option.rating.toFixed(1)}</span>
+                              </div>
+                              <Button size="sm" asChild>
+                                <Link href={`/chat/${option.id}`}>Reservar Agora</Link>
+                              </Button>
                             </div>
                             <DialogTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => setSelectedMotorist(option)} title="Denunciar motorista">
-                                    <ShieldAlert className="h-5 w-5 text-destructive" />
-                                </Button>
+                              <Button variant="ghost" size="icon" onClick={() => setSelectedMotorist(option)} title="Denunciar motorista">
+                                <ShieldAlert className="h-5 w-5 text-destructive" />
+                              </Button>
                             </DialogTrigger>
                           </div>
                         </CardContent>
                       </Card>
-                     )
+                    )
                   })
                 ) : (
                   <Card>
-                      <CardContent className="p-8 text-center">
-                          <p className="text-muted-foreground">Nenhuma carona corresponde aos seus critérios. Tente ajustar os filtros.</p>
-                      </CardContent>
+                    <CardContent className="p-8 text-center">
+                      <p className="text-muted-foreground">Nenhuma carona corresponde aos seus critérios. Tente ajustar os filtros.</p>
+                    </CardContent>
                   </Card>
                 )}
               </div>
             </section>
           </div>
-           {selectedMotorist && (
+          {selectedMotorist && (
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Denunciar {selectedMotorist.motorist}</DialogTitle>
@@ -213,7 +212,7 @@ export default function FindARidePage() {
               </div>
               <DialogFooter>
                 <DialogClose asChild>
-                    <Button variant="outline">Cancelar</Button>
+                  <Button variant="outline">Cancelar</Button>
                 </DialogClose>
                 <DialogClose asChild>
                   <Button variant="destructive" onClick={handleReportSubmit}>Enviar Denúncia</Button>
