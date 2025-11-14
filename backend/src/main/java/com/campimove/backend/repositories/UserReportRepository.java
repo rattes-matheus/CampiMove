@@ -3,5 +3,5 @@ package com.campimove.backend.repositories;
 import com.campimove.backend.entities.UserReport;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserReportRepository extends JpaRepository<UserReport,Integer> {
+public interface UserReportRepository extends JpaRepository<UserReport,Long> {
 }

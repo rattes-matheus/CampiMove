@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/send-report")
-public class UserReportController {
+public class SendReportController {
     @Autowired
     private UserReportRepository userReportRepository;
 
