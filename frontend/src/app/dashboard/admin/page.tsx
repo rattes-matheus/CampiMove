@@ -31,20 +31,27 @@ const initialUsers = [
   { id: 'user-3', name: 'Pedro Santos', email: 'pedro.santos@exemplo.com' },
 ];
 
-const initialReports = [
-    { id: 'rep-1', reportedMotorist: 'João da Silva', reporter: 'Ana Clara', reason: 'Direção perigosa e velocidade excessiva.'},
-    { id: 'rep-2', reportedMotorist: 'Samuel Wilson', reporter: 'Bruno Lima', reason: 'Veículo em más condições de higiene.'},
-];
+interface UserReport {
+  id: number;
+  userid: number;
+  report_text: string;
+}
 
 export default function AdminDashboardPage() {
   const { toast } = useToast();
   const [schedules, setSchedules] = useState<BusSchedule[]>([]);
   const [users, setUsers] = useState(initialUsers);
-  const [reports, setReports] = useState(initialReports);
+  const [reports, setReports] = useState<UserReport[]>([]);
   const [notification, setNotification] = useState('');
   const [newRoute, setNewRoute] = useState('');
   const [newTime, setNewTime] = useState('');
   const [modified, setModified] = useState(0);
+
+  useEffect(() => {
+    axios.get("http://localhost:8080/api/admin/reports")
+      .then((res) => setReports(res.data))
+      .catch((err: Error) => console.log("Erro ao buscar denúncias:", err))
+  }, [modified]);
 
   useEffect(() => {
     axios.get<BusSchedule[]>("http://localhost:8080/api/routes").then((res) => {
@@ -59,11 +66,11 @@ export default function AdminDashboardPage() {
         schedule: newTime + ":00"
       }).then(() => {
         toast({ title: 'Sucesso', description: 'Novo horário adicionado.' });
-        setModified(modified+1);
+        setModified(modified + 1);
       }).catch((err: Error) => {
-          toast({ title: 'Erro', description: 'Erro ao criar o novo horario de Intercampi', variant: 'destructive' });  
-          console.log("Can't create a new Bus Schedule : ", err.message);
-        }
+        toast({ title: 'Erro', description: 'Erro ao criar o novo horario de Intercampi', variant: 'destructive' });
+        console.log("Can't create a new Bus Schedule : ", err.message);
+      }
       ).finally(() => {
         setNewRoute('');
         setNewTime('');
@@ -78,17 +85,24 @@ export default function AdminDashboardPage() {
       id: id
     }).then(() => {
       toast({ title: 'Sucesso', description: 'Horário removido.' })
-      setModified(modified+1);
+      setModified(modified + 1);
     })
-    .catch((err) => {
-        toast({ title: 'Erro', description: 'Erro ao deletar o horario de Intercampi', variant: 'destructive' });  
+      .catch((err) => {
+        toast({ title: 'Erro', description: 'Erro ao deletar o horario de Intercampi', variant: 'destructive' });
         console.log("Can't delete the Bus Schedule : ", err.message);
-    })
+      })
   };
-  
-  const handleDismissReport = (id: string) => {
-    setReports(reports.filter(r => r.id !== id));
-    toast({ title: 'Sucesso', description: 'Denúncia dispensada.' });
+
+  const handleDismissReport = (id: number) => {
+    axios.delete(`http://localhost:8080/api/admin/reports/${id}/ignore`)
+      .then(() => {
+        toast({ title: 'Sucesso', description: 'Denúncia excluída.' });
+        setModified(modified + 1);
+      })
+      .catch(err => {
+        toast({ title: "Erro", description: "Falha ao excluir denúncia", variant: "destructive" });
+        console.log(err);
+      });
   };
 
   const handleSendNotification = () => {
@@ -101,12 +115,15 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleBanUser = (id: string) => {
-    const user = users.find(u => u.id === id);
-    if(user){
-      setUsers(users.filter(u => u.id !== id));
-      toast({ title: 'Sucesso', description: `Usuário ${user.name} foi banido.` });
-    }
+  const handleBanUser = (userId: number, reportId: number) => {
+    axios.post(`http://localhost:8080/api/admin/reports/${userId}/${reportId}/delete-user`)
+      .then(() => {
+        toast({ title: "Sucesso", description: "Usuário banido e denúncia removida." });
+        setModified(modified + 1);
+      })
+      .catch(() => {
+        toast({ title: "Erro", description: "Falha ao banir usuário.", variant: "destructive" });
+      });
   };
 
   return (
@@ -209,24 +226,47 @@ export default function AdminDashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reports.map(report => (
-                    <TableRow key={report.id}>
-                      <TableCell className="font-medium">{report.reportedMotorist}</TableCell>
-                      <TableCell className="text-muted-foreground">{report.reason}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleDismissReport(report.id)}>
-                            <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Dispensar
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => {/* Lógica para banir baseada no nome */
-                           const userToBan = users.find(u => u.name === report.reportedMotorist);
-                           if(userToBan) handleBanUser(userToBan.id);
-                           handleDismissReport(report.id);
-                        }}>
-                          <UserX className="mr-2 h-4 w-4" /> Banir
-                        </Button>
+                  {reports.length > 0 ? (
+                    reports.map(report => {
+                      const user = users.find(u => Number(u.id) === Number(report.userid));
+
+                      return (
+                        <TableRow key={report.id}>
+                          <TableCell className="font-medium">
+                            {user ? user.name : `Usuário #${report.userid}`}
+                          </TableCell>
+
+                          <TableCell className="text-muted-foreground">
+                            {report.report_text}
+                          </TableCell>
+
+                          <TableCell className="text-right space-x-2">
+
+                            {/* Ignorar */}
+                            <Button variant="ghost" size="sm"
+                              onClick={() => handleDismissReport(report.id)}>
+                              <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                              Dispensar
+                            </Button>
+
+                            {/* Banir */}
+                            <Button variant="destructive" size="sm"
+                              onClick={() => handleBanUser(report.userid, report.id)}>
+                              <UserX className="mr-2 h-4 w-4" />
+                              Banir
+                            </Button>
+
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                        Nenhuma denúncia encontrada.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -253,7 +293,7 @@ export default function AdminDashboardPage() {
                       <TableCell>{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="destructive" size="sm" onClick={() => handleBanUser(user.id)}>
+                        <Button variant="destructive" size="sm">
                           <UserX className="mr-2 h-4 w-4" /> Banir
                         </Button>
                       </TableCell>
