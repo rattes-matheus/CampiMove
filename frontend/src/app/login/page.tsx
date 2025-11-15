@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Header } from '@/components/landing/header';
 import { Footer } from '@/components/landing/footer';
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,13 +17,32 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     console.log('Tentativa de login com:', { email, password });
-    // Esta é uma implementação estática. A lógica de autenticação precisa ser adicionada.
-    router.push('/dashboard');
+
+    try {
+        const response = await axios.post("http://localhost:8080/login", {
+            "email" : email,
+            "password" : password
+            })
+         if (response.status === 200 || response.status === 201) {
+                    setError('');
+                    const data = response.data;
+                    if (data.role == "ADMIN") return router.push("/dashboard/admin")
+                    if (data.role == "DRIVER") return router.push("/dashboard/motorist")
+                    return router.replace('/dashboard');
+                }
+        }
+    catch(err) {
+            if (axios.isAxiosError(err) && err.response && err.response.data) {
+                const errorMessage = err.response.data.email || 'Erro no login. Tente novamente';
+                setError(errorMessage);
+                }
+            else setError('Ocorreu um erro desconhecido.');
   };
+}
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
