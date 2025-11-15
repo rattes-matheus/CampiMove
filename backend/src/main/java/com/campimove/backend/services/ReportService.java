@@ -25,11 +25,13 @@ public class ReportService {
         userReportRepository.deleteById(id);
     }
 
-    public void deleteUser (Long userId, Long reportId) {
+    public void disableUser (Long userId, Long reportId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
-        userRepository.delete(user);
+        user.setActive(false);
+        userRepository.save(user);
 
-        ignoreReport(reportId);
+        if (reportId != null)
+            ignoreReport(reportId);
     }
 }

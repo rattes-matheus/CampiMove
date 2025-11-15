@@ -18,14 +18,4 @@ public class ShowReportController {
     public List<UserReport> getReports() {
         return reportService.listReports();
     }
-
-    @PostMapping("/{id}/ignore")
-    public void ignoreReport(@PathVariable Long id) {
-        reportService.ignoreReport(id);
-    }
-
-    @PostMapping("/{userId}/{reportId}/delete-user")
-    public void deleteUser(@PathVariable Long userId, @PathVariable Long reportId) {
-        reportService.deleteUser(userId, reportId);
-    }
 }

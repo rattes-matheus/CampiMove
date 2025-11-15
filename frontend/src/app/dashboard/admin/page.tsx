@@ -115,10 +115,21 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleBanUser = (userId: number, reportId: number) => {
-    axios.post(`http://localhost:8080/api/admin/reports/${userId}/${reportId}/delete-user`)
+  const handleBanUser = (userId: number, reportId: null) => {
+    axios.post(`http://localhost:8080/api/admin/reports/${userId}/disable-user`)
       .then(() => {
-        toast({ title: "Sucesso", description: "Usuário banido e denúncia removida." });
+        toast({ title: "Sucesso", description: "Usuário banido." });
+        setModified(modified + 1);
+      })
+      .catch(() => {
+        toast({ title: "Erro", description: "Falha ao banir usuário.", variant: "destructive" });
+      });
+  };
+
+  const handleBanUserFromReport = (userId: number, reportId: number) => {
+    axios.post(`http://localhost:8080/api/admin/reports/${reportId}/${userId}/disable-from-report`)
+      .then(() => {
+        toast({ title: "Sucesso", description: "Usuário banido e denúncia excluída." });
         setModified(modified + 1);
       })
       .catch(() => {
