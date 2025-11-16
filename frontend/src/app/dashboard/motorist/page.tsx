@@ -1,12 +1,27 @@
-
+'use client';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { Footer } from '@/components/landing/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bus, CarIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function MotoristDashboardPage() {
+    const router = useRouter();
+
+    useEffect(() => {
+          if (typeof window === 'undefined') return;
+
+          const token = localStorage.getItem('jwt_token');
+          const userRole = localStorage.getItem('user_role');
+
+          if (!token) return router.push("/login");
+          if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
+          }, [router]);
+
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <DashboardHeader />

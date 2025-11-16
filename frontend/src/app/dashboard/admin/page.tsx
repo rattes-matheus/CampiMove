@@ -4,6 +4,7 @@
 import BusSchedule from '@/lib/interfaces/BusSchedule';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from "next/navigation";
 import { DashboardHeader } from '@/components/dashboard/header';
 import { Footer } from '@/components/landing/footer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -45,14 +46,24 @@ export default function AdminDashboardPage() {
   const [newRoute, setNewRoute] = useState('');
   const [newTime, setNewTime] = useState('');
   const [modified, setModified] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
+      if (typeof window !== 'undefined') {
+                const token = localStorage.getItem('jwt_token');
+                const userRole = localStorage.getItem('user_role');
+                }
+            if (!token) return router.push("/login");
+            if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
+            if (userRole === "DRIVER") return router.push("/dashboard/motorist");
     axios.get<BusSchedule[]>("http://localhost:8080/api/routes").then((res) => {
       setSchedules(res.data)
     }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
-  }, [modified]);
+  }, [modified, router]);
 
   const handleAddSchedule = () => {
+      const token = localStorage.getItem('jwt_token');
+      if (!token) return router.push("/login");
     if (newRoute && newTime) {
       axios.post("http://localhost:8080/api/routes", {
         route: newRoute,
@@ -74,6 +85,8 @@ export default function AdminDashboardPage() {
   };
 
   const handleRemoveSchedule = (id: number) => {
+      const token = localStorage.getItem('jwt_token');
+            if (!token) return router.push("/login");
     axios.post("http://localhost:8080/api/routes/delete", {
       id: id
     }).then(() => {
@@ -87,11 +100,15 @@ export default function AdminDashboardPage() {
   };
   
   const handleDismissReport = (id: string) => {
+      const token = localStorage.getItem('jwt_token');
+            if (!token) return router.push("/login");
     setReports(reports.filter(r => r.id !== id));
     toast({ title: 'Sucesso', description: 'Denúncia dispensada.' });
   };
 
   const handleSendNotification = () => {
+      const token = localStorage.getItem('jwt_token');
+            if (!token) return router.push("/login");
     if (notification.trim()) {
       console.log("Enviando notificação:", notification);
       toast({ title: 'Sucesso', description: 'Notificação enviada para todos os usuários.' });
@@ -102,6 +119,8 @@ export default function AdminDashboardPage() {
   };
 
   const handleBanUser = (id: string) => {
+      const token = localStorage.getItem('jwt_token');
+            if (!token) return router.push("/login");
     const user = users.find(u => u.id === id);
     if(user){
       setUsers(users.filter(u => u.id !== id));

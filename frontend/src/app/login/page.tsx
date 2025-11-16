@@ -30,6 +30,12 @@ export default function LoginPage() {
          if (response.status === 200 || response.status === 201) {
                     setError('');
                     const data = response.data;
+
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('jwt_token', data.token);
+                        localStorage.setItem('user_role', data.role);
+                    }
+
                     if (data.role == "ADMIN") return router.push("/dashboard/admin")
                     if (data.role == "DRIVER") return router.push("/dashboard/motorist")
                     return router.replace('/dashboard');
@@ -37,7 +43,7 @@ export default function LoginPage() {
         }
     catch(err) {
             if (axios.isAxiosError(err) && err.response && err.response.data) {
-                const errorMessage = err.response.data.email || 'Erro no login. Tente novamente';
+                const errorMessage = err.response.data.error || 'Erro no login. Tente novamente';
                 setError(errorMessage);
                 }
             else setError('Ocorreu um erro desconhecido.');

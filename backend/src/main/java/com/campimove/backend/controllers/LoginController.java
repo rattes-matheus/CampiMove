@@ -1,8 +1,10 @@
 package com.campimove.backend.controllers;
 
+import com.campimove.backend.dtos.LoginResponse;
 import com.campimove.backend.dtos.LoginUserRequest;
 import com.campimove.backend.entities.User;
 import com.campimove.backend.repositories.UserRepository;
+import com.campimove.backend.services.JwtService;
 import lombok.AllArgsConstructor;
 import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import java.util.Map;
 public class LoginController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @PostMapping
     public ResponseEntity<?> login(@RequestBody LoginUserRequest request) {
@@ -29,6 +32,8 @@ public class LoginController {
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) return ResponseEntity.status(401).body(Map.of("error", "Email ou senha incorretos"));
 
-        return ResponseEntity.ok(Map.of("message", "Login realizado com sucesso", "role", user.getRole()));
+        String jwtToken = jwtService.generateToken(user);
+
+        return ResponseEntity.ok(new LoginResponse(jwtToken, user.getRole()));
     }
 }

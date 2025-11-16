@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import axios from "axios";
+import { useEffect } from 'react';
 
 export default function RegisterTransportPage() {
   const { toast } = useToast();
@@ -20,6 +21,16 @@ export default function RegisterTransportPage() {
   const [model, setModel] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [capacity, setCapacity] = useState('');
+
+  useEffect(() => {
+      if (typeof window === 'undefined') return;
+
+      const token = localStorage.getItem('jwt_token');
+      const userRole = localStorage.getItem('user_role');
+
+      if (!token) return router.push("/login");
+      if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
+      }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +63,9 @@ export default function RegisterTransportPage() {
       });
       return;
     }
+
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return router.push("/login");
 
     const response = axios.post("http://localhost:8080/api/register-transport", {
       type: transportType,
