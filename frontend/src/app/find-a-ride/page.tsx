@@ -16,6 +16,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation'
+import axios from 'axios';
 
 export const transportOptions = [
   {
@@ -67,8 +70,27 @@ export default function FindARidePage() {
   const [selectedMotorist, setSelectedMotorist] = useState<TransportOption | null>(null);
   const [reportReason, setReportReason] = useState('');
   const { toast } = useToast();
+  const router = useRouter();
+
+  useEffect(() => {
+      const fetchData = async () => {
+                      let token = null;
+                      if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+                      if (!token) return router.push("/login");
+
+                      const res = await axios.get("http://localhost:8080/auth/me", {
+                                headers: {Authorization: `Bearer ${token}`}
+                               })
+                           const userRole = res.data.role;
+
+                          if (userRole === "DRIVER") return router.push("/dashboard/motorist");
+                      }
+              fetchData();
+        }, [router]);
 
   const handleReportSubmit = () => {
+      const token = localStorage.getItem('jwt_token');
+          if (!token) return router.push("/login");
     if (selectedMotorist && reportReason.trim()) {
       console.log(`Denunciando motorista ${selectedMotorist.motorist} por: ${reportReason}`);
       toast({

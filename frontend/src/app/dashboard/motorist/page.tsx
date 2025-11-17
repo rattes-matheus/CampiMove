@@ -1,12 +1,34 @@
-
+'use client';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { Footer } from '@/components/landing/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bus, CarIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import axios from "axios";
 
 export default function MotoristDashboardPage() {
+    const router = useRouter();
+
+    useEffect(() => {
+        const fetchData = async () => {
+                  let token = null;
+                  if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+                  if (!token) return router.push("/login");
+
+                  const res = await axios.get("http://localhost:8080/auth/me", {
+                            headers: {Authorization: `Bearer ${token}`}
+                           })
+                       const userRole = res.data.role;
+
+                  if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
+                  }
+              fetchData();
+          }, [router]);
+
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <DashboardHeader />
