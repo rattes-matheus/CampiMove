@@ -1,44 +1,37 @@
 package com.campimove.backend.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalTime;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Entity
-public class CadastraHorarioDeOnibus {
+@NoArgsConstructor
+@Table(name = "routes")
+public class IntercampiRoute {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relacionamento com o ônibus
-    @ManyToOne
-    @JoinColumn(name = "onibus_id", nullable = false)
-    private Onibus onibus;
+    @NotBlank
+    private String route;
 
-    // Relacionamento com o motorista
-    @ManyToOne
-    @JoinColumn(name = "motorista_id", nullable = false)
-    private Motorista motorista;
+    @NotNull
+    private LocalTime schedule;
 
-    private String origem;
-    private String destino;
-
-    private LocalDateTime horarioSaida;
-    private LocalDateTime horarioChegada;
-
-    public CadastraHorarioDeOnibus() {}
-
-    public CadastraHorarioDeOnibus(Onibus onibus, Motorista motorista, String origem, String destino,
-                                   LocalDateTime horarioSaida, LocalDateTime horarioChegada) {
-        this.onibus = onibus;
-        this.motorista = motorista;
-        this.origem = origem;
-        this.destino = destino;
-        this.horarioSaida = horarioSaida;
-        this.horarioChegada = horarioChegada;
+    public IntercampiRoute(String route, LocalTime schedule) {
+        this.route = route;
+        this.schedule = schedule;
     }
 }
