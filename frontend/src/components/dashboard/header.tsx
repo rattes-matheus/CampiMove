@@ -37,7 +37,7 @@ export function DashboardHeader() {
     const image = PlaceHolderImages.find(p => p.id === 'testimonial-1');
 
     const handleLogout = () => {
-        // Esta é uma implementação estática. A lógica de autenticação precisa ser adicionada.
+        localStorage.removeItem("jwt_token")
         router.push('/');
     };
 
