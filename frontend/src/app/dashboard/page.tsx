@@ -63,13 +63,19 @@ export default function DashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-        if (typeof window === 'undefined') return;
+      const fetchData = async () => {
+                let token = null;
+                if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+                if (!token) return router.push("/login");
 
-        const token = localStorage.getItem('jwt_token');
-        const userRole = localStorage.getItem('user_role');
+                const res = await axios.get("http://localhost:8080/auth/me", {
+                          headers: {Authorization: `Bearer ${token}`}
+                         })
+                     const userRole = res.data.role;
 
-        if (!token) router.push("/login");
-        if (userRole === "DRIVER") return router.push("/dashboard/motorist");
+                     if (userRole === "DRIVER") return router.push("/dashboard/motorist");
+                }
+        fetchData();
         }, [router]);
 
   const handleRateClick = (travel: Travel) => {
@@ -79,8 +85,6 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-      const token = localStorage.getItem('jwt_token');
-          if (!token) return router.push("/login");
     axios.get<BusSchedule[]>("http://localhost:8080/api/routes").then((res) => {
       setSchedules(res.data)
     }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
@@ -88,8 +92,6 @@ export default function DashboardPage() {
   }, [router]);
 
   const handleRatingSubmit = () => {
-      const token = localStorage.getItem('jwt_token');
-          if (!token) return router.push("/login");
     if (selectedTravel && rating > 0) {
       console.log(`Enviando avaliação ${rating} para a viagem ${selectedTravel.id}`);
       // Esta é uma implementação estática.

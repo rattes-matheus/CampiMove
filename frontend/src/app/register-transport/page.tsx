@@ -23,13 +23,19 @@ export default function RegisterTransportPage() {
   const [capacity, setCapacity] = useState('');
 
   useEffect(() => {
-      if (typeof window === 'undefined') return;
+      const fetchData = async () => {
+                      let token = null;
+                      if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+                      if (!token) return router.push("/login");
 
-      const token = localStorage.getItem('jwt_token');
-      const userRole = localStorage.getItem('user_role');
+                      const res = await axios.get("http://localhost:8080/auth/me", {
+                                headers: {Authorization: `Bearer ${token}`}
+                               })
+                           const userRole = res.data.role;
 
-      if (!token) return router.push("/login");
-      if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
+                           if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
+                      }
+              fetchData();
       }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {

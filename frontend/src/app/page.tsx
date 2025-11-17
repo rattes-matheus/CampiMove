@@ -1,3 +1,5 @@
+'use client'
+
 import { Header } from '@/components/landing/header';
 import { Hero } from '@/components/landing/hero';
 import { Features } from '@/components/landing/features';
@@ -5,20 +7,29 @@ import { Testimonials } from '@/components/landing/testimonials';
 import { Cta } from '@/components/landing/cta';
 import { Footer } from '@/components/landing/footer';
 import { useRouter } from "next/navigation";
+import { useEffect } from 'react';
+import axios from "axios";
 
 export default function Home() {
     const router = useRouter();
 
     useEffect(() => {
-            if (typeof window === 'undefined') return;
+        const fetchData = async () => {
+                          let token = null;
+                          if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+                          if (!token) return router.push("/");
 
-            const token = localStorage.getItem('jwt_token');
-            const userRole = localStorage.getItem('user_role');
+                          const res = await axios.get("http://localhost:8080/auth/me", {
+                                    headers: {Authorization: `Bearer ${token}`}
+                                   })
+                               const userRole = res.data.role;
 
-            if (!token) return router.push("/");
-            if (data.role == "ADMIN") return router.push("/dashboard/admin")
-            if (data.role == "DRIVER") return router.push("/dashboard/motorist")
-            return router.replace('/dashboard');
+                          if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
+                          if (userRole == "ADMIN") return router.push("/dashboard/admin")
+                                      if (userRole == "DRIVER") return router.push("/dashboard/motorist")
+                                      return router.replace('/dashboard');
+                          }
+                      fetchData();
             }, [router]);
 
   return (

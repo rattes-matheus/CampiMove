@@ -49,16 +49,23 @@ export default function AdminDashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-      if (typeof window !== 'undefined') {
-                const token = localStorage.getItem('jwt_token');
-                const userRole = localStorage.getItem('user_role');
-                }
-            if (!token) return router.push("/login");
-            if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
-            if (userRole === "DRIVER") return router.push("/dashboard/motorist");
-    axios.get<BusSchedule[]>("http://localhost:8080/api/routes").then((res) => {
-      setSchedules(res.data)
-    }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
+      const fetchData = async () => {
+          let token = null;
+          if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+          if (!token) return router.push("/login");
+
+          const res = await axios.get("http://localhost:8080/auth/me", {
+                    headers: {Authorization: `Bearer ${token}`}
+                   })
+               const userRole = res.data.role;
+
+               if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
+                     if (userRole === "DRIVER") return router.push("/dashboard/motorist");
+                   axios.get<BusSchedule[]>("http://localhost:8080/api/routes").then((res) => {
+                     setSchedules(res.data)
+                   }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
+          }
+  fetchData();
   }, [modified, router]);
 
   const handleAddSchedule = () => {

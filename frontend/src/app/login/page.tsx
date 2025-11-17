@@ -20,28 +20,24 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    console.log('Tentativa de login com:', { email, password });
 
     try {
         const response = await axios.post("http://localhost:8080/login", {
             "email" : email,
             "password" : password
             })
-         if (response.status === 200 || response.status === 201) {
+         if (response.status === 200) {
                     setError('');
                     const data = response.data;
 
-                    if (typeof window !== 'undefined') {
-                        localStorage.setItem('jwt_token', data.token);
-                        localStorage.setItem('user_role', data.role);
-                    }
+                    if (typeof window !== 'undefined') localStorage.setItem('jwt_token', data.token);
 
                     if (data.role == "ADMIN") return router.push("/dashboard/admin")
                     if (data.role == "DRIVER") return router.push("/dashboard/motorist")
                     return router.replace('/dashboard');
-                }
-        }
-    catch(err) {
+                    }
+
+    }catch(err) {
             if (axios.isAxiosError(err) && err.response && err.response.data) {
                 const errorMessage = err.response.data.error || 'Erro no login. Tente novamente';
                 setError(errorMessage);
