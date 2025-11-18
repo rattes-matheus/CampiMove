@@ -34,12 +34,15 @@ public class AuthController {
 
         if (user == null) return ResponseEntity.status(401).build();
 
+        String profilePictureURL = user.getProfilePictureUrl() == null ? "" : user.getProfilePictureUrl();
+
         return ResponseEntity.ok(
                 Map.of(
                         "id", user.getId(),
                         "email", user.getEmail(),
                         "role", user.getRole().name(),
-                        "name", user.getName()
+                        "name", user.getName(),
+                        "profilePictureURL", profilePictureURL
                 )
         );
     }

@@ -165,7 +165,7 @@ export default function FindARidePage() {
                                                     <div className="flex items-center gap-4">
                                                         {(
                                                             <Avatar className="h-14 w-14">
-                                                                <AvatarImage src={option.profilePicURL}/>
+                                                                <AvatarImage src={"http://localhost:8080" + option.profilePictureURL}/>
                                                                 <AvatarFallback>{option.motorist.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                                                             </Avatar>
                                                         )}

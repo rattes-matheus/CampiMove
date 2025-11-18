@@ -17,7 +17,7 @@ type User = {
     id: number;
     name: string;
     email: string;
-    profilePictureUrl: string | null;
+    profilePictureURL: string | null;
 };
 
 export default function EditProfilePage() {
@@ -29,7 +29,6 @@ export default function EditProfilePage() {
     const [isLoading, setIsLoading] = useState(false);
 
     let token: any = null;
-
     if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
 
     const baseUrlForDisplay = API_URL.includes('backend') ? 'http://localhost:8080' : API_URL;
@@ -48,8 +47,10 @@ export default function EditProfilePage() {
             setEmail(response.data.email);
             setId(response.data.id);
 
-            if (response.data.profilePictureUrl) {
-                setCurrentImageUrl(baseUrlForDisplay + response.data.profilePictureUrl);
+            console.log(response.data)
+
+            if (response.data.profilePictureURL) {
+                setCurrentImageUrl("http://localhost:8080" + response.data.profilePictureURL);
             }
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
@@ -60,12 +61,13 @@ export default function EditProfilePage() {
             });
         } finally {
             setIsLoading(false);
+            console.log(currentImageUrl)
         }
     }, [baseUrlForDisplay, toast]);
 
     useEffect(() => {
         fetchUserData();
-    }, [fetchUserData]);
+    }, []);
 
     const handleSaveChanges = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -115,7 +117,14 @@ export default function EditProfilePage() {
         try {
 
             const response = await axios.put(
-                `${API_URL}/api/profile/${CURRENT_USER_ID}/picture`,
+                `http://localhost:8080/profile/${id}/picture`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: `Bearer ${token}`
+                    }
+                }
             );
 
             if (response.data.profilePictureUrl) {
