@@ -1,3 +1,5 @@
 package com.campimove.backend.dtos;
 
-public record RegisterTransportDTO(String type, String model, Long capacity, String contact) {}
+import com.campimove.backend.enums.TransportTypes;
+
+public record RegisterTransportDTO(TransportTypes type, String model, Long capacity, String contact, String motorist) {}

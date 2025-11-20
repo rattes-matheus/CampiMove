@@ -1,5 +1,6 @@
 package com.campimove.backend.entities;
 
+import com.campimove.backend.enums.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,6 +39,9 @@ public class User {
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;
 
+    @Column(name = "rating")
+    private double rating;
+
     public User(String email, String password, Role role) {
         this.name = email.split("@")[0];
         this.email = email;
@@ -45,6 +49,7 @@ public class User {
         this.role = role;
         this.verified = false;
         this.active = true;
+        this.rating = 0.0;
     }
 }
 

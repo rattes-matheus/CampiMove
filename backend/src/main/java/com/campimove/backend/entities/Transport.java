@@ -1,5 +1,6 @@
 package com.campimove.backend.entities;
 
+import com.campimove.backend.enums.TransportTypes;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,7 +19,11 @@ public class Transport {
     private Long id;
 
     @NotBlank
-    private String type;
+    private String motorist;
+
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    private TransportTypes type;
 
     @NotBlank
     private String model;
@@ -31,11 +36,12 @@ public class Transport {
     
     private boolean active;
 
-    public Transport(String type, String model, String contact, Long capacity) {
+    public Transport(TransportTypes type, String model, String contact, Long capacity, String motorist) {
         this.type = type;
         this.model = model;
         this.contact = contact;
         this.capacity = capacity;
         this.active = false;
+        this.motorist = motorist;
     }
 }

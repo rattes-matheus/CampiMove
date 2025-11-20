@@ -1,4 +1,4 @@
-package com.campimove.backend.entities;
+package com.campimove.backend.enums;
 
 public enum Role {
     STUDENT,

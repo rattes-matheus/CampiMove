@@ -1,0 +1,2 @@
+ALTER TABLE users
+    ADD COLUMN rating REAL DEFAULT 0.0
