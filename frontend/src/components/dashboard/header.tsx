@@ -15,6 +15,9 @@ import { Logo } from '@/components/logo';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useRouter, usePathname } from 'next/navigation';
 import { Bell } from 'lucide-react';
+import {useEffect, useState} from "react";
+import axios from "axios";
+import {toast} from "@/hooks/use-toast";
 
 const notifications = [
     {
@@ -36,10 +39,42 @@ export function DashboardHeader() {
     const pathname = usePathname();
     const image = PlaceHolderImages.find(p => p.id === 'testimonial-1');
 
+    let token: any = null;
+
+    if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+
+    const [username, setUsername] = useState("")
+    const [email, setEmail] = useState("");
+
     const handleLogout = () => {
-        // Esta é uma implementação estática. A lógica de autenticação precisa ser adicionada.
+        localStorage.removeItem("jwt_token")
         router.push('/');
     };
+
+    async function fetchData() {
+        try {
+            const response = await axios.get<{email: string, name: string}>(`http://localhost:8080/auth/me`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            setUsername(response.data.name);
+            setEmail(response.data.email);
+
+        } catch (error) {
+            console.error('Erro ao buscar dados:', error);
+            toast({
+                title: 'Erro de Carregamento',
+                description: 'Não foi possível carregar os dados do perfil. Verifique a API e o Token.',
+                variant: 'destructive'
+            });
+        }
+    }
+
+    useEffect(() => {
+        fetchData()
+    }, [])
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -85,9 +120,9 @@ export function DashboardHeader() {
                             <DropdownMenuContent className="w-56" align="end" forceMount>
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">Usuário</p>
+                                        <p className="text-sm font-medium leading-none">{username}</p>
                                         <p className="text-xs leading-none text-muted-foreground">
-                                            usuario@exemplo.com
+                                            {email}
                                         </p>
                                     </div>
                                 </DropdownMenuLabel>

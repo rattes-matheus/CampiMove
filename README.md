@@ -76,6 +76,7 @@ O **CampiMove** tem como objetivo melhorar a mobilidade para os campi do CEFET, 
 | CSU14  | Login                                    | REQ015                            | RN009, RN002, RN003, RN006       |
 | CSU15  | Recuperar senha                          | REQ015                            | RN002                            |
 | CSU16  | Mandar e receber mensagens de motoristas | REQ021                            | RN008, RN006, RN009              |
+| CSU17  | Realizar Logout                          | REQ016                            | RN002, RN006, RN008, RN009       |
 
 ## Planejamento
 | Sprint | Caso de Uso | Desenvolvedor                |
@@ -96,4 +97,5 @@ O **CampiMove** tem como objetivo melhorar a mobilidade para os campi do CEFET, 
 |    2   |   CSU14   |  Pedro Peixoto       |
 |    3   |   CSU15   |  Pedro Peixoto       |
 |    2   |   CSU16   |  Bruno Frade         |
+|    2   |   CSU17   |  Bruno Frade         |
 

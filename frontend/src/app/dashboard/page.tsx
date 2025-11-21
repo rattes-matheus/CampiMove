@@ -21,6 +21,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import BusSchedule from '@/lib/interfaces/BusSchedule';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 
 const initialRecentTravels = [
@@ -59,6 +60,23 @@ export default function DashboardPage() {
   const [schedules, setSchedules] = useState<BusSchedule[]>([]);
   const [currentMinutes, setCurrentMinutes] = useState<number>(0);
   const now = new Date();
+  const router = useRouter();
+
+  useEffect(() => {
+      const fetchData = async () => {
+                let token = null;
+                if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+                if (!token) return router.push("/login");
+
+                const res = await axios.get("http://localhost:8080/auth/me", {
+                          headers: {Authorization: `Bearer ${token}`}
+                         })
+                     const userRole = res.data.role;
+
+                     if (userRole === "DRIVER") return router.push("/dashboard/motorist");
+                }
+        fetchData();
+        }, [router]);
 
   const handleRateClick = (travel: Travel) => {
     setSelectedTravel(travel);
@@ -71,7 +89,7 @@ export default function DashboardPage() {
       setSchedules(res.data)
     }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
     setCurrentMinutes(now.getHours() * 60 + now.getMinutes());
-  }, []);
+  }, [router]);
 
   const handleRatingSubmit = () => {
     if (selectedTravel && rating > 0) {
