@@ -33,7 +33,8 @@ type Driver = {
     motorist: string,
     transportType: string,
     rating: number,
-    profilePicURL: string
+    profilePicURL: string,
+    model: string
 };
 
 const transportIcons: { [key: string]: React.ReactNode } = {
@@ -174,7 +175,7 @@ export default function FindARidePage() {
                                                             <div
                                                                 className="flex items-center gap-2 text-sm text-muted-foreground">
                                                                 {transportIcons[option.transportType]}
-                                                                <span>{option.transportType === 'Carpool' ? 'Carona' : option.transportType === 'Bike' ? 'Bicicleta' : 'Patinete'}</span>
+                                                                <span>{(option.transportType === 'CARPOOL' ? 'Carro' : option.transportType === 'BIKE' ? 'Bicicleta' : 'Patinete') + " " + option.model}</span>
                                                             </div>
                                                         </div>
                                                     </div>
