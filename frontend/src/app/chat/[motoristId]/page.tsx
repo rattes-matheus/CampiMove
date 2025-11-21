@@ -120,9 +120,8 @@ export default function ChatPage() {
 
     const recipient = withUserId ? recipientUser : motorist;
     const recipientName = withUserId ? recipientUser?.name : motorist?.motorist;
-    const recipientAvatarUrl = withUserId
-        ? (recipientUser?.profilePictureURL ? `http://localhost:8080${recipientUser.profilePictureURL}` : undefined)
-        : (motorist?.profilePictureURL ? `http://localhost:8080${motorist.profilePictureURL}` : undefined);
+    console.log(recipientUser?.profilePictureURL)
+    const recipientAvatarUrl = `http://localhost:8080${recipientUser?.profilePictureURL}`
 
     useEffect(() => {
         if (!userId) {
@@ -143,57 +142,70 @@ export default function ChatPage() {
     useEffect(() => {
         if (!roomId) return;
 
-        console.log(`Tentando conectar à sala: ${roomId}`);
+        let client: Client;
 
-        const client = new Client({
-            webSocketFactory: () => new SockJS(SOCKET_URL),
-            reconnectDelay: 5000,
-            onConnect: (frame) => {
-                console.log('Conectado: ' + frame);
+        const fetchHistoryAndConnect = async () => {
+            try {
+                const response = await axios.get<Message[]>(
+                    `http://localhost:8080/chat/history/${roomId}`,
+                    {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }
+                );
+                setMessages(response.data);
 
-                client.subscribe(`/topic/chat/${roomId}`, (message) => {
-                    const receivedMessage: Message = JSON.parse(message.body);
-                    setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+            } catch (err) {
+                console.error("Falha ao buscar histórico:", err);
+                toast({
+                    title: 'Erro ao carregar chat',
+                    description: 'Não foi possível carregar o histórico de mensagens.',
+                    variant: 'destructive'
                 });
-            },
-            onStompError: (frame) => {
-                console.error('Erro no Broker: ' + frame.headers['message']);
-                console.error('Detalhes: ' + frame.body);
-            },
-        });
+            }
 
-        client.activate();
-        setStompClient(client);
+            console.log(`Tentando conectar à sala: ${roomId} (após carregar histórico)`);
+
+            client = new Client({
+                webSocketFactory: () => new SockJS(SOCKET_URL),
+                reconnectDelay: 5000,
+                onConnect: (frame) => {
+                    console.log('Conectado: ' + frame);
+
+                    client.subscribe(`/topic/chat/${roomId}`, (message) => {
+                        const receivedMessage: Message = JSON.parse(message.body);
+                        setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+                    });
+                },
+                onStompError: (frame) => {
+                    console.error('Erro no Broker: ' + frame.headers['message']);
+                },
+            });
+
+            client.activate();
+            setStompClient(client);
+        };
+
+        fetchHistoryAndConnect();
 
         return () => {
-            client.deactivate();
-            console.log("Desconectado.");
+            if (client) {
+                client.deactivate();
+                console.log("Desconectado.");
+            }
         };
-    }, [roomId]);
+    }, [roomId, token]);
 
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
 
         if (newMessage.trim() && stompClient && roomId && userId && username) {
-
-            const recipientId = withUserId ? withUserId : motoristId;
-            const currentUserId = withUserId ? motoristId : userId.toString();
-
-            const message: Message = {
-                senderId: currentUserId,
-                senderName: username,
-                recipientId: recipientId,
-                text: newMessage,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            };
-
             const finalMessage: Message = {
                 senderId: userId.toString(),
                 senderName: username,
                 recipientId: withUserId ? withUserId : motoristId,
                 text: newMessage,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                timestamp: new Date().toISOString(),
             };
 
 
@@ -287,7 +299,6 @@ export default function ChatPage() {
                                 const messageSenderName = isCurrentUser ? "" : recipientName;
                                 const senderAvatarUrl = isCurrentUser ? undefined : recipientAvatarUrl;
 
-
                                 return (
                                     <div
                                         key={index}
@@ -309,7 +320,7 @@ export default function ChatPage() {
                                             }`}
                                         >
                                             <p>{msg.text}</p>
-                                            <p className="text-xs opacity-75 mt-1 text-right">{msg.timestamp}</p>
+                                            <p className="text-xs opacity-75 mt-1 text-right">{new Date(msg.timestamp).toLocaleString()}</p>
                                         </div>
                                     </div>
                                 )

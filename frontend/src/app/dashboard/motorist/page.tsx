@@ -56,9 +56,35 @@ export default function MotoristDashboardPage() {
         }
     }
 
+    async function fetchConversations(motoristId: number) {
+        try {
+            const response = await axios.get<ConversationState[]>(
+                `http://localhost:8080/chat/conversations/${motoristId}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setActiveConversations(response.data);
+        } catch (error) {
+            console.error('Erro ao buscar conversas:', error);
+            toast({
+                title: 'Erro de Carregamento',
+                description: 'Não foi possível carregar as conversas. Verifique a API e o Token.',
+                variant: 'destructive'
+            });
+        }
+    }
+
     useEffect(() => {
-        fetchUserData();
+        const loadData = async () => {
+            await fetchUserData();
+        }
+        loadData();
     }, []);
+
+    useEffect(() => {
+        if (userId) {
+            fetchConversations(userId);
+        }
+    }, [userId]);
 
     const [activeConversations, setActiveConversations] = useState<ConversationState[]>([]);
 
@@ -73,29 +99,26 @@ export default function MotoristDashboardPage() {
             webSocketFactory: () => new SockJS(SOCKET_URL),
             reconnectDelay: 5000,
             onConnect: (frame) => {
-                console.log('Dashboard Conectado: ' + frame);
-
                 client.subscribe(`/topic/dashboard/${userId}`, (message) => {
                     const receivedMsg: ConversationMessage = JSON.parse(message.body);
 
                     setActiveConversations(prevConversations => {
                         const existingChatIndex = prevConversations.findIndex(
-                            (chat) => chat.userId === receivedMsg.senderId
+                            chat => chat.userId === receivedMsg.senderId || chat.userId === receivedMsg.recipientId
                         );
 
-                        const newConversationEntry: ConversationState = {
+                        const newChat: ConversationState = {
                             userId: receivedMsg.senderId,
                             userName: receivedMsg.senderName,
                             lastMessage: receivedMsg.text,
-                            motoristId: receivedMsg.recipientId, // que é o ID deste motorista
+                            motoristId: receivedMsg.recipientId,
                         };
 
-                        if (existingChatIndex > -1) {
-                            const updatedConversations = [...prevConversations];
-                            updatedConversations[existingChatIndex] = newConversationEntry;
-                            return updatedConversations;
+                        if (existingChatIndex !== -1) {
+                            const updatedChats = prevConversations.filter((_, index) => index !== existingChatIndex);
+                            return [newChat, ...updatedChats];
                         } else {
-                            return [newConversationEntry, ...prevConversations];
+                            return [newChat, ...prevConversations];
                         }
                     });
                 });
