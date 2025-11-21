@@ -12,7 +12,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useRouter, usePathname } from 'next/navigation';
 import { Bell } from 'lucide-react';
 import {useEffect, useState} from "react";
@@ -36,8 +35,6 @@ const notifications = [
 
 export function DashboardHeader() {
     const router = useRouter();
-    const pathname = usePathname();
-    const image = PlaceHolderImages.find(p => p.id === 'testimonial-1');
 
     let token: any = null;
 
@@ -45,9 +42,11 @@ export function DashboardHeader() {
 
     const [username, setUsername] = useState("")
     const [email, setEmail] = useState("");
+    const [profilePictureURL, setProfilePictureURL] = useState("");
 
     const handleLogout = () => {
         localStorage.removeItem("jwt_token")
+        localStorage.removeItem("email")
         router.push('/');
     };
 
@@ -61,6 +60,11 @@ export function DashboardHeader() {
 
             setUsername(response.data.name);
             setEmail(response.data.email);
+            const newURL = "http://localhost:8080" + response.data.profilePictureURL;
+
+            console.log("API URL:", newURL);
+
+            setProfilePictureURL(newURL);
 
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
@@ -112,8 +116,8 @@ export function DashboardHeader() {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                                     <Avatar className="h-10 w-10">
-                                        {image && <AvatarImage src={image.imageUrl} alt={image.description} data-ai-hint={image.imageHint} />}
-                                        <AvatarFallback>U</AvatarFallback>
+                                        {profilePictureURL && <AvatarImage src={profilePictureURL} />}
+                                        <AvatarFallback>{username[0] ? username[0].toUpperCase() : username[0]}</AvatarFallback>
                                     </Avatar>
                                 </Button>
                             </DropdownMenuTrigger>
