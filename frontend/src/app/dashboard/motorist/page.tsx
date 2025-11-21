@@ -1,3 +1,4 @@
+'use client';
 
 import { DashboardHeader } from '@/components/dashboard/header';
 import { Footer } from '@/components/landing/footer';
@@ -5,25 +6,112 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Bus, CarIcon, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import axios from "axios";
+import {toast} from "@/hooks/use-toast";
 
-// Sample data for active conversations
-const activeConversations = [
-    {
-        userId: 'user-123',
-        userName: 'Ana Clara',
-        lastMessage: 'Olá! Preciso ir para o Campus II.',
-        motoristId: '1'
-    },
-    {
-        userId: 'user-456',
-        userName: 'Bruno Lima',
-        lastMessage: 'Você já está a caminho?',
-        motoristId: '1'
-    },
-];
+const SOCKET_URL = 'http://localhost:8080/ws';
 
+type ConversationMessage = {
+    senderId: string;
+    senderName: string;
+    recipientId: string; // Este será o FAKE_MOTORIST_ID
+    text: string;
+};
+
+type ConversationState = {
+    userId: string;
+    userName: string;
+    lastMessage: string;
+    motoristId: string;
+};
 
 export default function MotoristDashboardPage() {
+
+    const [userId, setUserId] = useState<number>();
+
+    let token: any = null;
+
+    if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+
+    async function fetchUserData() {
+        try {
+            const response = await axios.get<{email: string, name: string, id: number}>(`http://localhost:8080/auth/me`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            setUserId(response.data.id)
+
+        } catch (error) {
+            console.error('Erro ao buscar dados:', error);
+            toast({
+                title: 'Erro de Carregamento',
+                description: 'Não foi possível carregar os dados do perfil. Verifique a API e o Token.',
+                variant: 'destructive'
+            });
+        }
+    }
+
+    useEffect(() => {
+        fetchUserData();
+    }, []);
+
+    const [activeConversations, setActiveConversations] = useState<ConversationState[]>([]);
+
+    useEffect(() => {
+
+        if (!userId) {
+            console.log("Dashboard: Aguardando userId...");
+            return;
+        }
+
+        const client = new Client({
+            webSocketFactory: () => new SockJS(SOCKET_URL),
+            reconnectDelay: 5000,
+            onConnect: (frame) => {
+                console.log('Dashboard Conectado: ' + frame);
+
+                client.subscribe(`/topic/dashboard/${userId}`, (message) => {
+                    const receivedMsg: ConversationMessage = JSON.parse(message.body);
+
+                    setActiveConversations(prevConversations => {
+                        const existingChatIndex = prevConversations.findIndex(
+                            (chat) => chat.userId === receivedMsg.senderId
+                        );
+
+                        const newConversationEntry: ConversationState = {
+                            userId: receivedMsg.senderId,
+                            userName: receivedMsg.senderName,
+                            lastMessage: receivedMsg.text,
+                            motoristId: receivedMsg.recipientId, // que é o ID deste motorista
+                        };
+
+                        if (existingChatIndex > -1) {
+                            const updatedConversations = [...prevConversations];
+                            updatedConversations[existingChatIndex] = newConversationEntry;
+                            return updatedConversations;
+                        } else {
+                            return [newConversationEntry, ...prevConversations];
+                        }
+                    });
+                });
+            },
+            onStompError: (frame) => {
+                console.error('Erro no Broker (Dashboard): ' + frame.headers['message']);
+            },
+        });
+
+        client.activate();
+
+        return () => {
+            client.deactivate();
+        };
+    }, [userId]);
+
     return (
         <div className="flex flex-col min-h-screen bg-background">
             <DashboardHeader />

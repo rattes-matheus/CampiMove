@@ -1,26 +1,27 @@
 package com.campimove.backend.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 @Controller
 public class ChatController {
 
-    public static class ChatMessage {
-        private String sender;
-        private String text;
-        private String timestamp;
-    }
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    public record ChatMessage ( String senderId, String senderName, String recipientId, String text, String timestamp){ }
 
     @MessageMapping("/chat.sendMessage/{roomId}")
-    @SendTo("/topic/chat/{roomId}")
-    public ChatMessage sendMessage(
+    public void sendMessage(
             @DestinationVariable String roomId,
             @Payload ChatMessage chatMessage) {
 
-        return chatMessage;
+        messagingTemplate.convertAndSend("/topic/chat/" + roomId, chatMessage);
+
+        messagingTemplate.convertAndSend("/topic/dashboard/" + chatMessage.recipientId(), chatMessage);
     }
 }
