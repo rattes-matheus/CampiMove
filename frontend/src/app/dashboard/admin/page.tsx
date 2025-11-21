@@ -262,7 +262,7 @@ export default function AdminDashboardPage() {
 
                             {/* Banir */}
                             <Button variant="destructive" size="sm"
-                              onClick={() => handleBanUser(report.userid, report.id)}>
+                              onClick={() => handleBanUserFromReport(report.userid, report.id)}>
                               <UserX className="mr-2 h-4 w-4" />
                               Banir
                             </Button>
