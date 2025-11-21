@@ -23,13 +23,6 @@ public class ChatController {
     @Autowired
     private ChatService chatService;
 
-    public record ConversationState (
-            String userId,
-            String userName,
-            String lastMessage,
-            String motoristId
-    ){ }
-
     @MessageMapping("/chat.sendMessage/{roomId}")
     public void sendMessage(
             @DestinationVariable String roomId,

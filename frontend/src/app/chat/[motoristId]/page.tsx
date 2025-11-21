@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { DashboardHeader } from '@/components/dashboard/header';
-import { Footer } from '@/components/landing/footer';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Send } from 'lucide-react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Driver } from '@/lib/DriverData';
+import {useState, useEffect} from 'react';
+import {DashboardHeader} from '@/components/dashboard/header';
+import {Footer} from '@/components/landing/footer';
+import {Card, CardContent, CardHeader, CardTitle, CardFooter} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
+import {ArrowLeft, Send} from 'lucide-react';
+import {useParams, useRouter, useSearchParams} from 'next/navigation';
+import {Driver} from '@/lib/DriverData';
 import axios from 'axios';
-import { Client } from '@stomp/stompjs';
+import {Client} from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import {toast} from "@/hooks/use-toast";
 
@@ -45,6 +45,9 @@ export default function ChatPage() {
 
     const [userId, setUserId] = useState<number>()
     const [username, setUsername] = useState<string>()
+    const [userRole, setUserRole] = useState<string>()
+
+    const [recipientAvatarUrl, setRecipientAvatarUrl] = useState<string>("nothing")
 
     let token: any = null;
 
@@ -52,7 +55,12 @@ export default function ChatPage() {
 
     async function fetchUserData() {
         try {
-            const response = await axios.get<{email: string, name: string, id: number}>(`http://localhost:8080/auth/me`, {
+            const response = await axios.get<{
+                email: string,
+                name: string,
+                id: number,
+                role: string
+            }>(`http://localhost:8080/auth/me`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -60,6 +68,7 @@ export default function ChatPage() {
 
             setUserId(response.data.id)
             setUsername(response.data.name)
+            setUserRole(response.data.role)
 
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
@@ -74,26 +83,24 @@ export default function ChatPage() {
     const SOCKET_URL = 'http://localhost:8080/ws';
 
     useEffect(() => {
-        if (withUserId) {
-            setIsRecipientLoading(true);
-            async function fetchRecipientUser() {
-                try {
-                    // Você precisa ter este endpoint no seu backend
-                    const response = await axios.get<RecipientUser>(`http://localhost:8080/auth/user/${withUserId}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    setRecipientUser(response.data);
-                } catch (error) {
-                    console.error("Failed to fetch recipient user data:", error);
-                    setRecipientUser(null);
-                } finally {
-                    setIsRecipientLoading(false);
-                }
+        setIsRecipientLoading(true);
+
+        async function fetchRecipientUser() {
+            try {
+                const response = await axios.get<RecipientUser>(`http://localhost:8080/auth/user/${withUserId || motoristId}`, {
+                    headers: {Authorization: `Bearer ${token}`}
+                });
+                console.log(response.data)
+                setRecipientUser(response.data);
+            } catch (error) {
+                console.error("Failed to fetch recipient user data:", error);
+                setRecipientUser(null);
+            } finally {
+                setIsRecipientLoading(false);
             }
-            fetchRecipientUser();
-        } else {
-            setIsRecipientLoading(false);
         }
+
+        fetchRecipientUser();
     }, [withUserId, token]);
 
     useEffect(() => {
@@ -108,8 +115,9 @@ export default function ChatPage() {
                 setIsLoading(false);
             }
         }
-        fetchMotorist();
+
         fetchUserData()
+        fetchMotorist();
     }, [motoristId]);
 
     const [stompClient, setStompClient] = useState<Client | null>(null);
@@ -120,15 +128,12 @@ export default function ChatPage() {
 
     const recipient = withUserId ? recipientUser : motorist;
     const recipientName = withUserId ? recipientUser?.name : motorist?.motorist;
-    console.log(recipientUser?.profilePictureURL)
-    const recipientAvatarUrl = `http://localhost:8080${recipientUser?.profilePictureURL}`
 
     useEffect(() => {
         if (!userId) {
             console.log("ChatPage: Aguardando userId para criar sala...");
             return;
         }
-
 
         const currentUserId = withUserId ? motoristId : userId.toString();
         const recipientId = withUserId ? withUserId : motoristId;
@@ -149,7 +154,7 @@ export default function ChatPage() {
                 const response = await axios.get<Message[]>(
                     `http://localhost:8080/chat/history/${roomId}`,
                     {
-                        headers: { Authorization: `Bearer ${token}` }
+                        headers: {Authorization: `Bearer ${token}`}
                     }
                 );
                 setMessages(response.data);
@@ -195,6 +200,10 @@ export default function ChatPage() {
         };
     }, [roomId, token]);
 
+    useEffect(() => {
+        setRecipientAvatarUrl(`http://localhost:8080${recipientUser?.profilePictureURL}`)
+    }, [recipientUser, userRole])
+
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
@@ -221,11 +230,11 @@ export default function ChatPage() {
     if (isLoading || isRecipientLoading) {
         return (
             <div className="flex flex-col min-h-screen bg-background">
-                <DashboardHeader />
+                <DashboardHeader/>
                 <main className="flex-grow container mx-auto px-4 md:px-6 py-8 flex items-center justify-center">
                     <p>Carregando...</p>
                 </main>
-                <Footer />
+                <Footer/>
             </div>
         );
     }
@@ -233,19 +242,20 @@ export default function ChatPage() {
     if (!motorist || (withUserId && !recipient)) {
         return (
             <div className="flex flex-col min-h-screen bg-background">
-                <DashboardHeader />
+                <DashboardHeader/>
                 <main className="flex-grow container mx-auto px-4 md:px-6 py-8 flex items-center justify-center">
                     <Card className="w-full max-w-md text-center p-8">
                         <CardTitle>Participante não encontrado</CardTitle>
                         <CardContent>
-                            <p className="text-muted-foreground mt-4">A pessoa com quem você está tentando conversar não foi encontrada.</p>
+                            <p className="text-muted-foreground mt-4">A pessoa com quem você está tentando conversar não
+                                foi encontrada.</p>
                             <Button onClick={() => router.back()} className="mt-6">
-                                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+                                <ArrowLeft className="mr-2 h-4 w-4"/> Voltar
                             </Button>
                         </CardContent>
                     </Card>
                 </main>
-                <Footer />
+                <Footer/>
             </div>
         );
     }
@@ -253,19 +263,20 @@ export default function ChatPage() {
     if (!recipient) {
         return (
             <div className="flex flex-col min-h-screen bg-background">
-                <DashboardHeader />
+                <DashboardHeader/>
                 <main className="flex-grow container mx-auto px-4 md:px-6 py-8 flex items-center justify-center">
                     <Card className="w-full max-w-md text-center p-8">
                         <CardTitle>Participante não encontrado</CardTitle>
                         <CardContent>
-                            <p className="text-muted-foreground mt-4">A pessoa com quem você está tentando conversar não foi encontrada.</p>
+                            <p className="text-muted-foreground mt-4">A pessoa com quem você está tentando conversar não
+                                foi encontrada.</p>
                             <Button onClick={() => router.back()} className="mt-6">
-                                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+                                <ArrowLeft className="mr-2 h-4 w-4"/> Voltar
                             </Button>
                         </CardContent>
                     </Card>
                 </main>
-                <Footer />
+                <Footer/>
             </div>
         );
     }
@@ -276,17 +287,17 @@ export default function ChatPage() {
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
-            <DashboardHeader />
+            <DashboardHeader/>
             <main className="flex-grow container mx-auto px-4 md:px-6 py-8">
                 <div className="max-w-3xl mx-auto">
                     <Card className="flex flex-col h-[70vh]">
                         <CardHeader className="flex flex-row items-center gap-4 border-b">
                             <Button variant="ghost" size="icon" onClick={() => router.back()}>
-                                <ArrowLeft />
+                                <ArrowLeft/>
                             </Button>
                             {recipientAvatarUrl && (
                                 <Avatar>
-                                    <AvatarImage src={recipientAvatarUrl} alt={recipientName} />
+                                    <AvatarImage src={recipientAvatarUrl} alt={recipientName}/>
                                     <AvatarFallback>{getFallbackName(recipientName)}</AvatarFallback>
                                 </Avatar>
                             )}
@@ -308,7 +319,7 @@ export default function ChatPage() {
                                     >
                                         {!isCurrentUser && senderAvatarUrl && (
                                             <Avatar className="h-8 w-8">
-                                                <AvatarImage src={senderAvatarUrl} />
+                                                <AvatarImage src={senderAvatarUrl}/>
                                                 <AvatarFallback>{getFallbackName(messageSenderName)}</AvatarFallback>
                                             </Avatar>
                                         )}
@@ -335,14 +346,14 @@ export default function ChatPage() {
                                     className="flex-grow"
                                 />
                                 <Button type="submit" size="icon">
-                                    <Send className="h-4 w-4" />
+                                    <Send className="h-4 w-4"/>
                                 </Button>
                             </form>
                         </CardFooter>
                     </Card>
                 </div>
             </main>
-            <Footer />
+            <Footer/>
         </div>
     );
 }

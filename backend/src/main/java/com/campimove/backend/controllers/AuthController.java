@@ -1,6 +1,8 @@
 package com.campimove.backend.controllers;
 
+import com.campimove.backend.dtos.ChatUserResponseDTO;
 import com.campimove.backend.entities.User;
+import com.campimove.backend.enums.Role;
 import com.campimove.backend.repositories.UserRepository;
 import com.campimove.backend.services.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -45,9 +47,10 @@ public class AuthController {
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<ChatUserResponseDTO> getUserById(@PathVariable Long id) {
         User user = userRepository.findById(id).get();
-        return ResponseEntity.ok(user);
+
+        return ResponseEntity.ok(new ChatUserResponseDTO(user.getId(), user.getRole(), user.getProfilePictureUrl(), user.getName()));
     }
 
 }
