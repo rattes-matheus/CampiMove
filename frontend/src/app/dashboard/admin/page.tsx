@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
     const fetchData = async () => {
       let token = null;
       if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
-      if (!token) return router.push("/login");
+      
 
       const res = await axios.get("http://localhost:8080/auth/me", {
         headers: { Authorization: `Bearer ${token}` }
@@ -112,8 +112,16 @@ export default function AdminDashboardPage() {
       })
   };
 
-  const handleDismissReport = (id: number) => {
-    
+  const handleDismissReport = async (id: number) => {
+    axios.delete(`http://localhost:8080/api/admin/reports/actions/${id}/ignore`)
+      .then(() => {
+        toast({ title: "Sucesso", description: "Denúncia removida." });
+
+        setModified(modified + 1);
+      }).catch((err) => {
+        toast({ title: 'Erro', description: 'Erro ao deletar a denúncia', variant: 'destructive' });
+        console.log("Can't delete report : ", err.message);
+      })
   };
 
   const handleSendNotification = () => {
