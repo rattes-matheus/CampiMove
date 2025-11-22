@@ -1,6 +1,7 @@
 package com.campimove.backend.controllers;
 
 import com.campimove.backend.dtos.ChatMessageDTO;
+import com.campimove.backend.dtos.ConversationStateDTO;
 import com.campimove.backend.services.ChatService; // Importe o serviço
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -43,7 +44,7 @@ public class ChatController {
 
     @GetMapping("/chat/conversations/{motoristId}")
     @ResponseBody
-    public List<ConversationState> getActiveConversations(@PathVariable String motoristId) {
+    public List<ConversationStateDTO> getActiveConversations(@PathVariable String motoristId) {
         return chatService.getActiveConversations(motoristId);
     }
 

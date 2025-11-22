@@ -2,6 +2,7 @@ package com.campimove.backend.services;
 
 import com.campimove.backend.controllers.ChatController;
 import com.campimove.backend.dtos.ChatMessageDTO;
+import com.campimove.backend.dtos.ConversationStateDTO;
 import com.campimove.backend.entities.ChatMessageEntity;
 import com.campimove.backend.entities.User;
 import com.campimove.backend.repositories.ChatMessageRepository;
@@ -34,7 +35,7 @@ public class ChatService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<ChatController.ConversationState> getActiveConversations(String motoristId) {
+    public List<ConversationStateDTO> getActiveConversations(String motoristId) {
         List<Object[]> results = repository.findLastMessagesForMotorist(motoristId);
 
         return results.stream().map(result -> {
@@ -48,7 +49,7 @@ public class ChatService {
 
             User otherParticipant = userRepository.findById(Long.valueOf(otherParticipantId)).get();
 
-            return new ChatController.ConversationState(
+            return new ConversationStateDTO(
                     otherParticipantId,
                     otherParticipant.getName(),
                     lastMessage,
