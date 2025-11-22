@@ -1,0 +1,103 @@
+package com.campimove.backend.services;
+
+import com.campimove.backend.dtos.TripDetailsDTO;
+import com.campimove.backend.dtos.UpcomingTravelDTO;
+import com.campimove.backend.entities.ChatMessageEntity;
+import com.campimove.backend.entities.User;
+import com.campimove.backend.repositories.ChatMessageRepository;
+import com.campimove.backend.repositories.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+@Service
+public class TravelService {
+
+    @Autowired
+    private ChatMessageRepository repository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    public List<UpcomingTravelDTO> getUpcomingTravelsForUser(String userId) {
+
+        List<String> acceptedRoomIds = repository.findAcceptedRoomIdsBySenderId(userId);
+
+        if (acceptedRoomIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ChatMessageEntity> proposalMessages = repository.findProposalMessagesByRoomIds(acceptedRoomIds);
+
+        return proposalMessages.stream().map(message -> {
+            try {
+                TripDetailsDTO tripDetails = objectMapper.readValue(
+                        message.getTripProposal(),
+                        TripDetailsDTO.class
+                );
+
+                String motoristId = message.getSenderId();
+                User motorist = userRepository.findById(Long.valueOf(motoristId))
+                        .orElse(null);
+
+                String motoristName = (motorist != null) ? motorist.getName() : "Motorista Desconhecido";
+
+                return new UpcomingTravelDTO(
+                        motoristName,
+                        tripDetails.origin(),
+                        tripDetails.destination(),
+                        tripDetails.schedule()
+                );
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    public List<UpcomingTravelDTO> getUpcomingTravelsForMotorist(String motoristId) {
+
+        List<String> acceptedRoomIds = repository.findAcceptedRoomIdsByRecipientId(motoristId);
+
+        if (acceptedRoomIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ChatMessageEntity> proposalMessages = repository.findProposalMessagesByRoomIds(acceptedRoomIds);
+
+        return proposalMessages.stream().map(message -> {
+            try {
+                TripDetailsDTO tripDetails = objectMapper.readValue(
+                        message.getTripProposal(),
+                        TripDetailsDTO.class
+                );
+
+                String passengerId = message.getRecipientId();
+                User passenger = userRepository.findById(Long.valueOf(passengerId))
+                        .orElse(null);
+
+                String passengerName = (passenger != null) ? passenger.getName() : "Passageiro Desconhecido";
+
+                return new UpcomingTravelDTO(
+                        passengerName,
+                        tripDetails.origin(),
+                        tripDetails.destination(),
+                        tripDetails.schedule()
+                );
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+}

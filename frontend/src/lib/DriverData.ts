@@ -6,7 +6,8 @@ export type Driver = {
     transportType: string,
     rating: number,
     profilePicURL: string,
-    model: string
+    model: string,
+    phoneNumber: string
 };
 
 export function getTransportOptions(): Promise<Driver[]> {

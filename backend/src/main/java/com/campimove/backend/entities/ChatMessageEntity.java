@@ -35,4 +35,9 @@ public class ChatMessageEntity {
     @Column(nullable = false)
     private Instant timestamp;
 
+    @Column(columnDefinition = "TEXT")
+    private String tripProposal;
+
+    private Boolean isTripAccepted;
+
 }

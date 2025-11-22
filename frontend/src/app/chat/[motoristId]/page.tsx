@@ -7,13 +7,22 @@ import {Card, CardContent, CardHeader, CardTitle, CardFooter} from '@/components
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
-import {ArrowLeft, Send} from 'lucide-react';
+import {ArrowLeft, CalendarPlus, Check, Send} from 'lucide-react';
 import {useParams, useRouter, useSearchParams} from 'next/navigation';
 import {Driver} from '@/lib/DriverData';
 import axios from 'axios';
 import {Client} from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import {toast} from "@/hooks/use-toast";
+import {
+    Dialog, DialogClose,
+    DialogContent,
+    DialogDescription, DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
+} from "@/components/ui/dialog";
+import {Label} from "recharts";
 
 type RecipientUser = {
     id: number;
@@ -25,8 +34,18 @@ type Message = {
     senderId: string;
     senderName: string;
     recipientId: string;
-    text: string;
+    text?: string;
     timestamp: string;
+    isTripAccepted?: boolean;
+    tripProposal?: TripDetails;
+};
+
+type TripDetails = {
+    origin: string;
+    destination: string;
+    price: string;
+    schedule: string;
+    motoristPhone: string | undefined;
 };
 
 export default function ChatPage() {
@@ -48,6 +67,12 @@ export default function ChatPage() {
     const [userRole, setUserRole] = useState<string>()
 
     const [recipientAvatarUrl, setRecipientAvatarUrl] = useState<string>("nothing")
+
+    const [origin, setOrigin] = useState('');
+    const [destination, setDestination] = useState('');
+    const [price, setPrice] = useState('');
+    const [schedule, setSchedule] = useState('');
+    const [isProposalDialogOpen, setIsProposalDialogOpen] = useState(false);
 
     let token: any = null;
 
@@ -281,6 +306,73 @@ export default function ChatPage() {
         );
     }
 
+    const handleSendProposal = () => {
+        if (origin && destination && price && schedule) {
+            const proposal: TripDetails = {origin, destination, price, schedule, motoristPhone: motorist?.phoneNumber};
+
+            if (userId && username) {
+                const message: Message = {
+                    senderId: userId.toString(),
+                    senderName: username,
+                    recipientId: withUserId ? withUserId : motoristId,
+                    timestamp: new Date().toISOString(),
+                    tripProposal: proposal,
+                };
+                if (stompClient && stompClient.connected) {
+                    stompClient.publish({
+                        destination: `/app/chat.sendMessage/${roomId}`,
+                        body: JSON.stringify(message)
+                    });
+                }
+
+                setIsProposalDialogOpen(false);
+                // Reset form
+                setOrigin('');
+                setDestination('');
+                setPrice('');
+                setSchedule('');
+            }
+        } else {
+            toast({
+                title: "Erro",
+                description: "Por favor, preencha todos os campos da proposta.",
+                variant: "destructive"
+            });
+        }
+    };
+
+    const handleAcceptTravel = (proposal: TripDetails) => {
+        const acceptedTravel = {
+            ...proposal,
+            motoristName: motorist?.motorist,
+            passengerName: recipientName,
+            status: 'Agendada'
+        };
+
+        const existingTravels = JSON.parse(localStorage.getItem('acceptedTravels') || '[]');
+        localStorage.setItem('acceptedTravels', JSON.stringify([...existingTravels, acceptedTravel]));
+
+        if (recipientUser && userId && username) {
+            const acceptedMessage: Message = {
+                senderId: userId.toString(),
+                senderName: username,
+                recipientId: withUserId ? withUserId : motoristId,
+                timestamp: new Date().toISOString(),
+                text: 'Viagem aceita!',
+                isTripAccepted: true,
+            };
+
+            if (stompClient && stompClient.connected) {
+                stompClient.publish({
+                    destination: `/app/chat.sendMessage/${roomId}`,
+                    body: JSON.stringify(acceptedMessage)
+                });
+            }
+
+            toast({title: "Viagem Aceita!", description: "A viagem foi adicionada ao seu painel."});
+        }
+    };
+
     const getFallbackName = (name: string | undefined) => {
         return name ? name.split(" ").map(n => n[0]).join("") : "U";
     }
@@ -306,9 +398,36 @@ export default function ChatPage() {
                         <CardContent className="flex-grow overflow-y-auto p-6 space-y-4">
                             {messages.map((msg, index) => {
                                 const isCurrentUser = msg.senderId === userId?.toString();
-
                                 const messageSenderName = isCurrentUser ? "" : recipientName;
                                 const senderAvatarUrl = isCurrentUser ? undefined : recipientAvatarUrl;
+
+                                if (msg.tripProposal) {
+                                    return (
+                                        <div key={index} className="flex justify-center">
+                                            <Card className="w-full max-w-sm my-2">
+                                                <CardHeader>
+                                                    <CardTitle className="text-center">Proposta de Viagem</CardTitle>
+                                                </CardHeader>
+                                                <CardContent className="text-sm space-y-2">
+                                                    <p><strong>De:</strong> {msg.tripProposal.origin}</p>
+                                                    <p><strong>Para:</strong> {msg.tripProposal.destination}</p>
+                                                    <p><strong>Horário:</strong> {msg.tripProposal.schedule}</p>
+                                                    <p><strong>Preço:</strong> R$ {msg.tripProposal.price}</p>
+                                                    <p><strong>Contato do
+                                                        Motorista:</strong> {msg.tripProposal.motoristPhone}</p>
+                                                </CardContent>
+                                                {(userRole === 'STUDENT' || userRole === "TEACHER") && !msg.isTripAccepted && (
+                                                    <CardFooter>
+                                                        <Button className="w-full"
+                                                                onClick={() => handleAcceptTravel(msg.tripProposal!)}>
+                                                            <Check className="mr-2 h-4 w-4"/> Aceitar Viagem
+                                                        </Button>
+                                                    </CardFooter>
+                                                )}
+                                            </Card>
+                                        </div>
+                                    )
+                                }
 
                                 return (
                                     <div
@@ -325,9 +444,11 @@ export default function ChatPage() {
                                         )}
                                         <div
                                             className={`max-w-xs lg:max-w-md rounded-lg px-4 py-2 ${
-                                                isCurrentUser
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : 'bg-muted'
+                                                msg.isTripAccepted
+                                                    ? 'bg-green-100 text-green-800 border border-green-300'
+                                                    : isCurrentUser
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : 'bg-muted'
                                             }`}
                                         >
                                             <p>{msg.text}</p>
@@ -339,6 +460,55 @@ export default function ChatPage() {
                         </CardContent>
                         <CardFooter className="p-4 border-t">
                             <form onSubmit={handleSendMessage} className="flex w-full items-center gap-2">
+
+                                {userRole === 'DRIVER' && (
+                                    <Dialog open={isProposalDialogOpen} onOpenChange={setIsProposalDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button type="button" variant="outline" size="icon">
+                                                <CalendarPlus className="h-4 w-4"/>
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Propor Nova Viagem</DialogTitle>
+                                                <DialogDescription>Preencha os detalhes da viagem para enviar ao
+                                                    passageiro.</DialogDescription>
+                                            </DialogHeader>
+                                            <div className="grid gap-4 py-4">
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="origin">Origem</Label>
+                                                    <Input id="origin" value={origin}
+                                                           onChange={(e) => setOrigin(e.target.value)}
+                                                           placeholder="Ex: Campus I"/>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="destination">Destino</Label>
+                                                    <Input id="destination" value={destination}
+                                                           onChange={(e) => setDestination(e.target.value)}
+                                                           placeholder="Ex: Campus II"/>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="price">Preço (R$)</Label>
+                                                    <Input id="price" type="number" value={price}
+                                                           onChange={(e) => setPrice(e.target.value)}
+                                                           placeholder="Ex: 10,00"/>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="schedule">Horário</Label>
+                                                    <Input id="schedule" type="time" value={schedule}
+                                                           onChange={(e) => setSchedule(e.target.value)}/>
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <DialogClose asChild>
+                                                    <Button variant="outline">Cancelar</Button>
+                                                </DialogClose>
+                                                <Button onClick={handleSendProposal}>Enviar Proposta</Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
+
                                 <Input
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
