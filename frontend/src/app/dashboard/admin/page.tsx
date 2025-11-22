@@ -32,16 +32,19 @@ const initialUsers = [
   { id: 'user-3', name: 'Pedro Santos', email: 'pedro.santos@exemplo.com' },
 ];
 
-const initialReports = [
-    { id: 'rep-1', reportedMotorist: 'João da Silva', reporter: 'Ana Clara', reason: 'Direção perigosa e velocidade excessiva.'},
-    { id: 'rep-2', reportedMotorist: 'Samuel Wilson', reporter: 'Bruno Lima', reason: 'Veículo em más condições de higiene.'},
-];
+type UserReport = {
+  id: number;
+  userid: number;
+  driverName: string;
+  report_text: string;
+};
+
 
 export default function AdminDashboardPage() {
   const { toast } = useToast();
   const [schedules, setSchedules] = useState<BusSchedule[]>([]);
   const [users, setUsers] = useState(initialUsers);
-  const [reports, setReports] = useState(initialReports);
+  const [reports, setReports] = useState<UserReport[]>([]);
   const [notification, setNotification] = useState('');
   const [newRoute, setNewRoute] = useState('');
   const [newTime, setNewTime] = useState('');
@@ -49,39 +52,42 @@ export default function AdminDashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-      const fetchData = async () => {
-          let token = null;
-          if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
-          if (!token) return router.push("/login");
+    const fetchData = async () => {
+      let token = null;
+      if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+      if (!token) return router.push("/login");
 
-          const res = await axios.get("http://localhost:8080/auth/me", {
-                    headers: {Authorization: `Bearer ${token}`}
-                   })
-               const userRole = res.data.role;
+      const res = await axios.get("http://localhost:8080/auth/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const userRole = res.data.role;
 
-               if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
-                     if (userRole === "DRIVER") return router.push("/dashboard/motorist");
-                   axios.get<BusSchedule[]>("http://localhost:8080/api/routes").then((res) => {
-                     setSchedules(res.data)
-                   }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
-          }
-  fetchData();
+      if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
+      if (userRole === "DRIVER") return router.push("/dashboard/motorist");
+      axios.get<BusSchedule[]>("http://localhost:8080/api/routes").then((res) => {
+        setSchedules(res.data)
+      }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
+    }
+    axios.get("http://localhost:8080/api/admin/reports")
+      .then((res) => setReports(res.data))
+      .catch((err) => console.log("Erro ao buscar reports: ", err.message));
+    fetchData();
   }, [modified, router]);
 
   const handleAddSchedule = () => {
-      const token = localStorage.getItem('jwt_token');
-      if (!token) return router.push("/login");
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return router.push("/login");
     if (newRoute && newTime) {
       axios.post("http://localhost:8080/api/routes", {
         route: newRoute,
         schedule: newTime + ":00"
       }).then(() => {
         toast({ title: 'Sucesso', description: 'Novo horário adicionado.' });
-        setModified(modified+1);
+        setModified(modified + 1);
       }).catch((err: Error) => {
-          toast({ title: 'Erro', description: 'Erro ao criar o novo horario de Intercampi', variant: 'destructive' });  
-          console.log("Can't create a new Bus Schedule : ", err.message);
-        }
+        toast({ title: 'Erro', description: 'Erro ao criar o novo horario de Intercampi', variant: 'destructive' });
+        console.log("Can't create a new Bus Schedule : ", err.message);
+      }
       ).finally(() => {
         setNewRoute('');
         setNewTime('');
@@ -92,30 +98,27 @@ export default function AdminDashboardPage() {
   };
 
   const handleRemoveSchedule = (id: number) => {
-      const token = localStorage.getItem('jwt_token');
-            if (!token) return router.push("/login");
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return router.push("/login");
     axios.post("http://localhost:8080/api/routes/delete", {
       id: id
     }).then(() => {
       toast({ title: 'Sucesso', description: 'Horário removido.' })
-      setModified(modified+1);
+      setModified(modified + 1);
     })
-    .catch((err) => {
-        toast({ title: 'Erro', description: 'Erro ao deletar o horario de Intercampi', variant: 'destructive' });  
+      .catch((err) => {
+        toast({ title: 'Erro', description: 'Erro ao deletar o horario de Intercampi', variant: 'destructive' });
         console.log("Can't delete the Bus Schedule : ", err.message);
-    })
+      })
   };
-  
-  const handleDismissReport = (id: string) => {
-      const token = localStorage.getItem('jwt_token');
-            if (!token) return router.push("/login");
-    setReports(reports.filter(r => r.id !== id));
-    toast({ title: 'Sucesso', description: 'Denúncia dispensada.' });
+
+  const handleDismissReport = (id: number) => {
+    
   };
 
   const handleSendNotification = () => {
-      const token = localStorage.getItem('jwt_token');
-            if (!token) return router.push("/login");
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return router.push("/login");
     if (notification.trim()) {
       console.log("Enviando notificação:", notification);
       toast({ title: 'Sucesso', description: 'Notificação enviada para todos os usuários.' });
@@ -126,10 +129,10 @@ export default function AdminDashboardPage() {
   };
 
   const handleBanUser = (id: string) => {
-      const token = localStorage.getItem('jwt_token');
-            if (!token) return router.push("/login");
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return router.push("/login");
     const user = users.find(u => u.id === id);
-    if(user){
+    if (user) {
       setUsers(users.filter(u => u.id !== id));
       toast({ title: 'Sucesso', description: `Usuário ${user.name} foi banido.` });
     }
@@ -235,18 +238,18 @@ export default function AdminDashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reports.map(report => (
+                  {reports.map((report) => (
                     <TableRow key={report.id}>
-                      <TableCell className="font-medium">{report.reportedMotorist}</TableCell>
-                      <TableCell className="text-muted-foreground">{report.reason}</TableCell>
+                      <TableCell className="font-medium">{report.driverName}</TableCell>
+                      <TableCell className="text-muted-foreground">{report.report_text}</TableCell>
                       <TableCell className="text-right space-x-2">
                         <Button variant="ghost" size="sm" onClick={() => handleDismissReport(report.id)}>
-                            <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Dispensar
+                          <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Dispensar
                         </Button>
                         <Button variant="destructive" size="sm" onClick={() => {/* Lógica para banir baseada no nome */
-                           const userToBan = users.find(u => u.name === report.reportedMotorist);
-                           if(userToBan) handleBanUser(userToBan.id);
-                           handleDismissReport(report.id);
+                          const userToBan = users.find(u => u.name === report.driverName);
+                          if (userToBan) handleBanUser(userToBan.id);
+                          handleDismissReport(report.id);
                         }}>
                           <UserX className="mr-2 h-4 w-4" /> Banir
                         </Button>

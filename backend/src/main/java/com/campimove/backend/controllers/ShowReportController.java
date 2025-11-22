@@ -1,5 +1,6 @@
 package com.campimove.backend.controllers;
 
+import com.campimove.backend.dtos.UserReportResponseDTO;
 import com.campimove.backend.entities.UserReport;
 import com.campimove.backend.services.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,7 @@ public class ShowReportController {
     private ReportService reportService;
 
     @GetMapping
-    public List<UserReport> getReports() {
+    public List<UserReportResponseDTO> getReports() {
         return reportService.listReports();
     }
 }

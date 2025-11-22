@@ -1,5 +1,6 @@
 package com.campimove.backend.services;
 
+import com.campimove.backend.dtos.UserReportResponseDTO;
 import com.campimove.backend.entities.User;
 import com.campimove.backend.entities.UserReport;
 import com.campimove.backend.repositories.UserReportRepository;
@@ -17,8 +18,21 @@ public class ReportService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<UserReport> listReports(){
-        return userReportRepository.findAll();
+    public List<UserReportResponseDTO> listReports(){
+        return userReportRepository.findAll().stream().map(report -> {
+            User driver = userRepository
+                    .findById(report.getUserid())
+                    .orElse(null);
+
+            String driverName = driver != null ? driver.getName() : "Usuário desconhecido";
+
+            return new UserReportResponseDTO(
+                    report.getId(),
+                    report.getUserid(),
+                    driverName,
+                    report.getReport_text()
+            );
+        }).toList();
     }
 
     public void ignoreReport(Long id){

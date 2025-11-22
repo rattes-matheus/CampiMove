@@ -74,8 +74,6 @@ export default function FindARidePage() {
     }, [router]);
 
     const handleReportSubmit = async (e: React.FormEvent) => {
-        const token = localStorage.getItem('jwt_token');
-        if (!token) return router.push("/login");
         if (selectedMotorist && reportReason.trim()) {
             e.preventDefault();
 
