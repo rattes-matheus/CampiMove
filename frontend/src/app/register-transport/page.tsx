@@ -28,13 +28,21 @@ export default function RegisterTransportPage() {
                       if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
                       if (!token) return router.push("/login");
 
-                      const res = await axios.get("http://localhost:8080/auth/me", {
-                                headers: {Authorization: `Bearer ${token}`}
-                               })
+                      try {
+                                const res = await axios.get("http://localhost:8080/auth/me", {
+                                          headers: {Authorization: `Bearer ${token}`}
+                                         });
+
                            const userRole = res.data.role;
 
                            if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
-                      }
+}
+               catch (err) {
+                                                                          localStorage.removeItem("jwt_token");
+                                                                          return router.push("/login");
+                                  }
+                              };
+
               fetchData();
       }, [router]);
 

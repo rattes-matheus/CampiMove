@@ -29,6 +29,8 @@ public class AuthController {
         User user = userRepository.findByEmail(email);
         if (user == null) return ResponseEntity.status(401).build();
 
+        if (!user.isActive()) return ResponseEntity.status(403).build();
+
         return ResponseEntity.ok(
                 Map.of(
                         "id", user.getId(),

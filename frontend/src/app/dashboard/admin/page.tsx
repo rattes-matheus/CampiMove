@@ -53,7 +53,7 @@ export default function AdminDashboardPage() {
           let token = null;
           if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
           if (!token) return router.push("/login");
-
+          try {
           const res = await axios.get("http://localhost:8080/auth/me", {
                     headers: {Authorization: `Bearer ${token}`}
                    })
@@ -64,7 +64,11 @@ export default function AdminDashboardPage() {
                    axios.get<BusSchedule[]>("http://localhost:8080/api/routes").then((res) => {
                      setSchedules(res.data)
                    }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
-          }
+          } catch (err) {
+              localStorage.removeItem("jwt_token");
+              return router.push("/login");
+              }
+      }
   fetchData();
   }, [modified, router]);
 
