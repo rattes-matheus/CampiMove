@@ -1,30 +1,30 @@
 services:
   backend:
-    build: 
-      context: ../Downloads/CampiMove-Bruno/backend
-      dockerfile: ../Downloads/CampiMove-Bruno/backend/Dockerfile
+    build:
+      context: ../Downloads/CampiMove-FranciscoEduardo/backend
+      dockerfile: ../Downloads/CampiMove-FranciscoEduardo/backend/Dockerfile
     container_name: campimove_backend
     depends_on:
       - postgres
       - redis
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=campimove_api
-      - DB_USER=postgres
-      - DB_PASS=admin
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: campimove_api
+      DB_USER: postgres
+      DB_PASS: admin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
-      - 8080:8080
+      - "8080:8080"
 
   frontend:
     build:
-      context: ../Downloads/CampiMove-Bruno/frontend
-      dockerfile: ../Downloads/CampiMove-Bruno/frontend/Dockerfile
+      context: ../Downloads/CampiMove-FranciscoEduardo/frontend
+      dockerfile: ../Downloads/CampiMove-FranciscoEduardo/frontend/Dockerfile
     container_name: campimove_frontend
     ports:
-      - 3000:3000
+      - "3000:3000"
     depends_on:
       - backend
     environment:
@@ -34,9 +34,9 @@ services:
     image: postgres:15
     container_name: postgres-db
     environment:
-      - POSTGRES_DB=campimove_api
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=admin
+      POSTGRES_DB: campimove_api
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
     ports:
       - "5432:5432"
     volumes:
