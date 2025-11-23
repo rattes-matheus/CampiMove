@@ -136,6 +136,17 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleBanUserFromReport = async (reportId: number, userId: number) => {
+    axios.post(`http://localhost:8080/api/admin/reports/actions/${reportId}/${userId}/disable-from-report`)
+    .then(() => {
+      toast({ title: "Sucesso", description: "Usuário banido."});
+      setModified(modified + 1);
+    }).catch((err) => {
+      toast({ title: 'Erro', description: 'Erro ao banir usuário', variant: 'destructive' });
+        console.log("Can't ban user : ", err.message);
+    })
+  }
+
   const handleBanUser = (id: string) => {
     const token = localStorage.getItem('jwt_token');
     if (!token) return router.push("/login");
@@ -254,11 +265,7 @@ export default function AdminDashboardPage() {
                         <Button variant="ghost" size="sm" onClick={() => handleDismissReport(report.id)}>
                           <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Dispensar
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => {/* Lógica para banir baseada no nome */
-                          const userToBan = users.find(u => u.name === report.driverName);
-                          if (userToBan) handleBanUser(userToBan.id);
-                          handleDismissReport(report.id);
-                        }}>
+                        <Button variant="destructive" size="sm" onClick={() => handleBanUserFromReport(report.id, report.userid)}>
                           <UserX className="mr-2 h-4 w-4" /> Banir
                         </Button>
                       </TableCell>

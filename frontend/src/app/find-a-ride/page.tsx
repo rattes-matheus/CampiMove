@@ -63,7 +63,6 @@ export default function FindARidePage() {
 
             } catch (error) {
                 console.error("Failed to fetch data", error);
-                router.push("/login");
             }
         };
         fetchData();
