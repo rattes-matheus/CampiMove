@@ -20,11 +20,15 @@ public class UserReport {
     @NotNull
     private Long userid;
 
+    @NotNull
+    private Long reporterId;
+
     @NotBlank
     private String report_text;
 
-    public UserReport(Long userId, String text) {
+    public UserReport(Long userId, Long reporterId, String text) {
         this.userid = userId;
+        this.reporterId = reporterId;
         this.report_text = text;
     }
 }

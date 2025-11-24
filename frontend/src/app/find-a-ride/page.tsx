@@ -39,6 +39,8 @@ export default function FindARidePage() {
     const [minRating, setMinRating] = useState(0);
     const [selectedMotorist, setSelectedMotorist] = useState<Driver | null>(null);
     const [reportReason, setReportReason] = useState('');
+    const [alreadyReportedMap, setAlreadyReportedMap] = useState<Record<number, boolean>>({});
+    const [meId, setMeId] = useState<number | null>(null);
     const { toast } = useToast();
     const router = useRouter();
 
@@ -46,12 +48,13 @@ export default function FindARidePage() {
         const fetchData = async () => {
             let token = null;
             if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
-            
+
             try {
                 const res = await axios.get("http://localhost:8080/auth/me", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const userRole = res.data.role;
+                setMeId(res.data.id);
 
                 if (userRole === "DRIVER") {
                     router.push("/dashboard/motorist");
@@ -65,8 +68,32 @@ export default function FindARidePage() {
                 console.error("Failed to fetch data", error);
             }
         };
+
         fetchData();
     }, [router]);
+
+    useEffect(() => {
+        if (!meId || drivers.length === 0) return;
+
+        const fetchReports = async () => {
+            const map: Record<number, boolean> = {};
+
+            for (const driver of drivers) {
+                try {
+                    const res = await axios.get(
+                        `http://localhost:8080/api/send-report/check?reporterId=${meId}&userid=${driver.id}`
+                    );
+                    map[driver.id] = res.data;
+                } catch {
+                    map[driver.id] = false;
+                }
+            }
+
+            setAlreadyReportedMap(map);
+        };
+
+        fetchReports();
+    }, [meId, drivers]);
 
     const handleReportSubmit = async (e: React.FormEvent) => {
         if (selectedMotorist && reportReason.trim()) {
@@ -74,8 +101,14 @@ export default function FindARidePage() {
 
             axios.post("http://localhost:8080/api/send-report", {
                 userid: selectedMotorist.id,
+                reporter_id: meId,
                 report_text: reportReason,
             }).then(() => {
+                setAlreadyReportedMap(prev => ({
+                    ...prev,
+                    [selectedMotorist.id]: true
+                }));
+
                 toast({
                     title: "Denúncia registrada",
                     description: `Sua denúncia contra ${selectedMotorist?.motorist} foi recebida com sucesso. Obrigado por ajudar a manter o app seguro.`,
@@ -88,6 +121,29 @@ export default function FindARidePage() {
             });
         }
     };
+
+    const checkIfUserAlreadyReported = async (motorist: Driver) => {
+        if (!meId) return;
+
+        setSelectedMotorist(motorist);
+        setReportReason("");
+
+        try {
+            const res = await axios.get(
+                `http://localhost:8080/api/send-report/check?reporterId=${meId}&userid=${motorist.id}`
+            );
+
+            setAlreadyReportedMap(prev => ({
+                ...prev,
+                [motorist.id]: res.data
+            }));
+
+        } catch (err) {
+            console.error("Erro ao checar denúncia:", err);
+        }
+    };
+
+
 
     const filteredTransport = drivers.filter((option) => {
         const typeMatch = transportType === 'all' || option.transportType.toUpperCase() === transportType.toUpperCase();
@@ -185,9 +241,17 @@ export default function FindARidePage() {
                                                         </Button>
                                                     </div>
                                                     <DialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon"
-                                                            onClick={() => setSelectedMotorist(option)}
-                                                            title="Denunciar motorista">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            disabled={alreadyReportedMap[option.id]}   // <-- aqui!
+                                                            title={
+                                                                alreadyReportedMap[option.id]
+                                                                    ? "Você já denunciou este motorista"
+                                                                    : "Denunciar motorista"
+                                                            }
+                                                            onClick={() => checkIfUserAlreadyReported(option)}
+                                                        >
                                                             <ShieldAlert className="h-5 w-5 text-destructive" />
                                                         </Button>
                                                     </DialogTrigger>

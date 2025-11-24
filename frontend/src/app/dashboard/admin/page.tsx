@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
     const fetchData = async () => {
       let token = null;
       if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
-      
+
 
       const res = await axios.get("http://localhost:8080/auth/me", {
         headers: { Authorization: `Bearer ${token}` }
@@ -138,13 +138,13 @@ export default function AdminDashboardPage() {
 
   const handleBanUserFromReport = async (reportId: number, userId: number) => {
     axios.post(`http://localhost:8080/api/admin/reports/actions/${reportId}/${userId}/disable-from-report`)
-    .then(() => {
-      toast({ title: "Sucesso", description: "Usuário banido."});
-      setModified(modified + 1);
-    }).catch((err) => {
-      toast({ title: 'Erro', description: 'Erro ao banir usuário', variant: 'destructive' });
+      .then(() => {
+        toast({ title: "Sucesso", description: "Usuário banido." });
+        setModified(modified + 1);
+      }).catch((err) => {
+        toast({ title: 'Erro', description: 'Erro ao banir usuário', variant: 'destructive' });
         console.log("Can't ban user : ", err.message);
-    })
+      })
   }
 
   const handleBanUser = (id: string) => {
@@ -248,31 +248,33 @@ export default function AdminDashboardPage() {
               <CardDescription>Gerencie denúncias feitas contra motoristas.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Motorista Denunciado</TableHead>
-                    <TableHead>Motivo</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reports.map((report) => (
-                    <TableRow key={report.id}>
-                      <TableCell className="font-medium">{report.driverName}</TableCell>
-                      <TableCell className="text-muted-foreground">{report.report_text}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleDismissReport(report.id)}>
-                          <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Dispensar
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleBanUserFromReport(report.id, report.userid)}>
-                          <UserX className="mr-2 h-4 w-4" /> Banir
-                        </Button>
-                      </TableCell>
+              <div className="max-h-80 overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Motorista Denunciado</TableHead>
+                      <TableHead>Motivo</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {reports.map((report) => (
+                      <TableRow key={report.id}>
+                        <TableCell className="font-medium">{report.driverName}</TableCell>
+                        <TableCell className="text-muted-foreground">{report.report_text}</TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleDismissReport(report.id)}>
+                            <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Dispensar
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleBanUserFromReport(report.id, report.userid)}>
+                            <UserX className="mr-2 h-4 w-4" /> Banir
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
 
@@ -283,28 +285,30 @@ export default function AdminDashboardPage() {
               <CardDescription>Visualize e bana usuários do sistema.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead className="text-right">Ação</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map(user => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="destructive" size="sm" onClick={() => handleBanUser(user.id)}>
-                          <UserX className="mr-2 h-4 w-4" /> Banir
-                        </Button>
-                      </TableCell>
+              <div className="max-h-80 overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="text-right">Ação</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map(user => (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="destructive" size="sm" onClick={() => handleBanUser(user.id)}>
+                            <UserX className="mr-2 h-4 w-4" /> Banir
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </div>

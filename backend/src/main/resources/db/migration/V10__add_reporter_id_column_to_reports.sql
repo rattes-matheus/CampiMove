@@ -1,0 +1,2 @@
+ALTER TABLE reports
+    ADD COLUMN reporter_id BIGINT NOT NULL;
