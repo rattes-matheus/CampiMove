@@ -151,10 +151,17 @@ export default function AdminDashboardPage() {
         toast({ title: 'Erro', description: 'Erro ao banir usuário', variant: 'destructive' });
         console.log("Can't ban user : ", err.message);
       })
-  }
+  };
 
-  const handleBanUser = (id: string) => {
-    
+  const handleBanUser = async (userId: number) => {
+    axios.post(`http://localhost:8080/api/admin/reports/actions/${userId}/disable-user`)
+      .then(() => {
+        toast({ title: "Sucesso", description: "Usuário banido." });
+        setModified(prev => prev + 1);
+      }).catch((err) => {
+        toast({ title: 'Erro', description: 'Erro ao banir usuário', variant: 'destructive' });
+        console.log("Can't ban user : ", err.message);
+      })
   };
 
   return (
@@ -300,7 +307,7 @@ export default function AdminDashboardPage() {
                         <TableCell>{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="destructive" size="sm">
+                          <Button variant="destructive" size="sm" onClick={() => handleBanUser(user.id)}>
                             <UserX className="mr-2 h-4 w-4" /> Banir
                           </Button>
                         </TableCell>
