@@ -26,12 +26,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Trash2, UserX, PlusCircle, ShieldX, CheckCircle } from 'lucide-react';
 import axios from "axios";
 
-const initialUsers = [
-  { id: 'user-1', name: 'João da Silva', email: 'joao.silva@exemplo.com' },
-  { id: 'user-2', name: 'Maria Souza', email: 'maria.souza@exemplo.com' },
-  { id: 'user-3', name: 'Pedro Santos', email: 'pedro.santos@exemplo.com' },
-];
-
 type UserReport = {
   id: number;
   userid: number;
@@ -39,11 +33,19 @@ type UserReport = {
   report_text: string;
 };
 
+type User = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+};
+
 
 export default function AdminDashboardPage() {
   const { toast } = useToast();
   const [schedules, setSchedules] = useState<BusSchedule[]>([]);
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [reports, setReports] = useState<UserReport[]>([]);
   const [notification, setNotification] = useState('');
   const [newRoute, setNewRoute] = useState('');
@@ -71,6 +73,10 @@ export default function AdminDashboardPage() {
     axios.get("http://localhost:8080/api/admin/reports")
       .then((res) => setReports(res.data))
       .catch((err) => console.log("Erro ao buscar reports: ", err.message));
+
+    axios.get("http://localhost:8080/api/admin/show-users")
+    .then((res) => setUsers(res.data))
+    .catch((err) => console.log("Erro ao buscar usuários:", err.message));
     fetchData();
   }, [modified, router]);
 
@@ -148,13 +154,7 @@ export default function AdminDashboardPage() {
   }
 
   const handleBanUser = (id: string) => {
-    const token = localStorage.getItem('jwt_token');
-    if (!token) return router.push("/login");
-    const user = users.find(u => u.id === id);
-    if (user) {
-      setUsers(users.filter(u => u.id !== id));
-      toast({ title: 'Sucesso', description: `Usuário ${user.name} foi banido.` });
-    }
+    
   };
 
   return (
@@ -300,7 +300,7 @@ export default function AdminDashboardPage() {
                         <TableCell>{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="destructive" size="sm" onClick={() => handleBanUser(user.id)}>
+                          <Button variant="destructive" size="sm">
                             <UserX className="mr-2 h-4 w-4" /> Banir
                           </Button>
                         </TableCell>
