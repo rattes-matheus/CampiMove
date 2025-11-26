@@ -42,6 +42,10 @@ public class ReportService {
     public void disableUser (Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (user.getRole().equals("ADMIN")) {
+            throw new RuntimeException("Admin não pode ser banido!");
+        }
+
         user.setActive(false);
         userRepository.save(user);
     }
@@ -49,5 +53,12 @@ public class ReportService {
     public void disableUserFromReport(Long userId, Long reportId) {
         disableUser(userId);
         ignoreReport(reportId);
+    }
+
+    public void enableUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setActive(true);
+        userRepository.save(user);
     }
 }

@@ -20,8 +20,13 @@ public class ReportActionsController {
         reportService.disableUser(userId);
     }
 
-    @PostMapping("/{reportId}/{userId}/disable-from-report")
-    public void disableFromReport(@PathVariable Long reportId, @PathVariable Long userId) {
+    @PostMapping("/{userId}/{reportId}/disable-from-report")
+    public void disableFromReport(@PathVariable Long userId, @PathVariable Long reportId) {
         reportService.disableUserFromReport(userId, reportId);
+    }
+
+    @PostMapping("/{userId}/enable-user")
+    public void enableUser(@PathVariable Long userId) {
+        reportService.enableUser(userId);
     }
 }
