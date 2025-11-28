@@ -83,7 +83,9 @@ export default function DashboardPage() {
 
             if (userRole === "DRIVER") return router.push("/dashboard/motorist");
 
-            const travelsRes = await axios.get<NextTravel[]>("http://localhost:8080/api/travels/my-upcoming", {
+            console.log(userId);
+
+            const travelsRes = await axios.get<NextTravel[]>("http://localhost:8080/travels/my-upcoming", {
                 headers: {Authorization: `Bearer ${token}`},
                 params: {
                     id: userId

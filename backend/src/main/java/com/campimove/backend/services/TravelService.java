@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -30,7 +31,7 @@ public class TravelService {
 
     public List<UpcomingTravelDTO> getUpcomingTravelsForUser(String userId) {
 
-        List<String> acceptedRoomIds = repository.findAcceptedRoomIdsBySenderId(userId);
+        List<String> acceptedRoomIds = repository.findAcceptedRoomIdsByRecipientId(userId);
 
         if (acceptedRoomIds.isEmpty()) {
             return Collections.emptyList();
@@ -66,7 +67,7 @@ public class TravelService {
 
     public List<UpcomingTravelDTO> getUpcomingTravelsForMotorist(String motoristId) {
 
-        List<String> acceptedRoomIds = repository.findAcceptedRoomIdsByRecipientId(motoristId);
+        List<String> acceptedRoomIds = repository.findAcceptedRoomIdsBySenderId(motoristId);
 
         if (acceptedRoomIds.isEmpty()) {
             return Collections.emptyList();
@@ -98,6 +99,15 @@ public class TravelService {
                 return null;
             }
         }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    public void changeTripStatus(String id, boolean status) {
+        List<String> listOfRoomIds = new LinkedList<>();
+        listOfRoomIds.add(id);
+
+        ChatMessageEntity proposal = repository.findProposalMessagesByRoomIds(listOfRoomIds).getLast();
+        proposal.setIsTripAccepted(status);
+        repository.save(proposal);
     }
 
 }

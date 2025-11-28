@@ -74,6 +74,8 @@ export default function ChatPage() {
     const [schedule, setSchedule] = useState('');
     const [isProposalDialogOpen, setIsProposalDialogOpen] = useState(false);
 
+    const [acceptedTravels, setAcceptedTravels] = useState(0);
+
     let token: any = null;
 
     if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
@@ -126,7 +128,7 @@ export default function ChatPage() {
         }
 
         fetchRecipientUser();
-    }, [withUserId, token]);
+    }, [withUserId, token, acceptedTravels]);
 
     useEffect(() => {
         async function fetchMotorist() {
@@ -143,7 +145,7 @@ export default function ChatPage() {
 
         fetchUserData()
         fetchMotorist();
-    }, [motoristId]);
+    }, [motoristId, acceptedTravels]);
 
     const [stompClient, setStompClient] = useState<Client | null>(null);
     const [roomId, setRoomId] = useState<string | null>(null);
@@ -166,7 +168,7 @@ export default function ChatPage() {
         const sortedIds = [currentUserId, recipientId].sort();
         setRoomId(sortedIds.join('_'));
 
-    }, [motoristId, withUserId, userId]);
+    }, [motoristId, withUserId, userId, acceptedTravels]);
 
 
     useEffect(() => {
@@ -223,7 +225,7 @@ export default function ChatPage() {
                 console.log("Desconectado.");
             }
         };
-    }, [roomId, token]);
+    }, [roomId, token, acceptedTravels]);
 
     useEffect(() => {
         setRecipientAvatarUrl(`http://localhost:8080${recipientUser?.profilePictureURL}`)
@@ -326,7 +328,6 @@ export default function ChatPage() {
                 }
 
                 setIsProposalDialogOpen(false);
-                // Reset form
                 setOrigin('');
                 setDestination('');
                 setPrice('');
@@ -359,7 +360,6 @@ export default function ChatPage() {
                 recipientId: withUserId ? withUserId : motoristId,
                 timestamp: new Date().toISOString(),
                 text: 'Viagem aceita!',
-                isTripAccepted: true,
             };
 
             if (stompClient && stompClient.connected) {
@@ -369,7 +369,16 @@ export default function ChatPage() {
                 });
             }
 
+            axios.put("http://localhost:8080/travels/status", {
+                id: roomId,
+                status: true
+            }, {
+                headers: {Authorization: `Bearer ${token}`}
+            })
+
             toast({title: "Viagem Aceita!", description: "A viagem foi adicionada ao seu painel."});
+
+            setAcceptedTravels(acceptedTravels+1);
         }
     };
 
@@ -416,9 +425,10 @@ export default function ChatPage() {
                                                     <p><strong>Contato do
                                                         Motorista:</strong> {msg.tripProposal.motoristPhone}</p>
                                                 </CardContent>
-                                                {(userRole === 'STUDENT' || userRole === "TEACHER") && !msg.isTripAccepted && (
+                                                {(userRole === 'STUDENT' || userRole === "TEACHER") && (
                                                     <CardFooter>
                                                         <Button className="w-full"
+                                                                disabled={msg.isTripAccepted}
                                                                 onClick={() => handleAcceptTravel(msg.tripProposal!)}>
                                                             <Check className="mr-2 h-4 w-4"/> Aceitar Viagem
                                                         </Button>

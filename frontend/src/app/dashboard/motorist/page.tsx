@@ -43,6 +43,8 @@ export default function MotoristDashboardPage() {
     const [userId, setUserId] = useState<number>();
     const [nextTravels, setNextTravels] = useState<NextTravel[]>([]);
 
+    const [numberOfTravels, setNumberOfTravels] = useState(0);
+
     useEffect(() => {
         const fetchData = async () => {
             let token = null;
@@ -59,12 +61,15 @@ export default function MotoristDashboardPage() {
                 router.push("/dashboard");
                 return;
             }
-            const travelsRes = await axios.get<NextTravel[]>("http://localhost:8080/api/travels/my-upcoming-motorist", {
+
+            const travelsRes = await axios.get<NextTravel[]>("http://localhost:8080/travels/my-upcoming-motorist", {
                 headers: {Authorization: `Bearer ${token}`},
                 params: {
                     id: userId
                 }
             });
+
+            setNumberOfTravels(travelsRes.data.length);
 
             setNextTravels(travelsRes.data);
         }
@@ -186,8 +191,8 @@ export default function MotoristDashboardPage() {
                             <Bus className="h-6 w-6 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-4xl font-bold">2</div>
-                            <p className="text-xs text-muted-foreground">Você tem 2 rotas ativas hoje</p>
+                            <div className="text-4xl font-bold">{numberOfTravels}</div>
+                            <p className="text-xs text-muted-foreground">Você tem {numberOfTravels} rotas ativas hoje</p>
                         </CardContent>
                     </Card>
 
