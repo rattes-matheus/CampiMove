@@ -1,4 +1,4 @@
-package com.campimove.backend.controllers;
+package com.campimove.backend.controller;
 
 import java.util.List;
 
