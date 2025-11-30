@@ -66,8 +66,7 @@ export default function DashboardPage() {
       const fetchData = async () => {
                 let token = null;
                 if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
-                if (!token) return router.push("/login");
-
+                
                 const res = await axios.get("http://localhost:8080/auth/me", {
                           headers: {Authorization: `Bearer ${token}`}
                          })
