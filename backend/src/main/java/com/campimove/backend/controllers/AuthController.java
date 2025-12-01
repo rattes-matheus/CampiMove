@@ -1,14 +1,14 @@
 package com.campimove.backend.controllers;
 
+import com.campimove.backend.dtos.ChatUserResponseDTO;
 import com.campimove.backend.entities.User;
+import com.campimove.backend.enums.Role;
 import com.campimove.backend.repositories.UserRepository;
 import com.campimove.backend.services.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -16,7 +16,10 @@ import java.util.Map;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
     private final JwtService jwtService;
+
+    @Autowired
     private final UserRepository userRepository;
 
     @GetMapping("/me")
@@ -27,6 +30,7 @@ public class AuthController {
         String email = jwtService.extractUsername(token);
 
         User user = userRepository.findByEmail(email);
+
         if (user == null) return ResponseEntity.status(401).build();
 
         if (!user.isActive()) return ResponseEntity.status(403).build();
@@ -35,8 +39,18 @@ public class AuthController {
                 Map.of(
                         "id", user.getId(),
                         "email", user.getEmail(),
-                        "role", user.getRole().name()
+                        "role", user.getRole().name(),
+                        "name", user.getName(),
+                        "profilePictureURL", profilePictureURL
                 )
         );
     }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<ChatUserResponseDTO> getUserById(@PathVariable Long id) {
+        User user = userRepository.findById(id).get();
+
+        return ResponseEntity.ok(new ChatUserResponseDTO(user.getId(), user.getRole(), user.getProfilePictureUrl(), user.getName()));
+    }
+
 }
