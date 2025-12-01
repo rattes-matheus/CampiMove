@@ -1,8 +1,8 @@
 services:
   backend:
     build:
-      context: ../Downloads/CampiMove-FranciscoEduardo/backend
-      dockerfile: ../Downloads/CampiMove-FranciscoEduardo/backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: campimove_backend
     depends_on:
       - postgres
@@ -17,18 +17,6 @@ services:
       REDIS_PORT: 6379
     ports:
       - "8080:8080"
-
-  frontend:
-    build:
-      context: ../Downloads/CampiMove-FranciscoEduardo/frontend
-      dockerfile: ../Downloads/CampiMove-FranciscoEduardo/frontend/Dockerfile
-    container_name: campimove_frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    environment:
-      NEXT_PUBLIC_API_URL: "http://localhost:8080"
 
   postgres:
     image: postgres:15

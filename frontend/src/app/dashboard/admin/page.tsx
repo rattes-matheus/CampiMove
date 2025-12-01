@@ -32,6 +32,13 @@ const initialReports = [
   { id: 'rep-2', reportedMotorist: 'Samuel Wilson', reporter: 'Bruno Lima', reason: 'Veículo em más condições de higiene.' },
 ];
 
+// ADICIONADO: Tipo para a resposta da API
+interface RouteResponse {
+  id: number;
+  route: string;
+  schedule: string;
+}
+
 export default function AdminDashboardPage() {
   const { toast } = useToast();
   const [schedules, setSchedules] = useState<any[]>([]);
@@ -41,55 +48,135 @@ export default function AdminDashboardPage() {
   const [newRoute, setNewRoute] = useState('');
   const [newTime, setNewTime] = useState('');
 
-  // 🔹 Carregar horários do banco ao abrir a página
-  useEffect(() => {
+  // ADICIONADO: Função separada para carregar horários
+  const fetchSchedules = () => {
     fetch("http://localhost:8080/api/routes")
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then(data => {
-          const formatted = data.map((r: any) => ({
+          console.log("Dados recebidos do backend:", data); // Para debug
+
+          // Se o backend retorna { data: [...] }
+          const list = Array.isArray(data)
+              ? data
+              : Array.isArray(data.data)
+                  ? data.data
+                  : [];
+
+          const formatted = list.map((r: any) => ({
             id: r.id,
             route: r.route,
             time: r.schedule
           }));
+
           setSchedules(formatted);
         })
-        .catch(err => console.error("Erro ao carregar horários:", err));
+        .catch(err => {
+          console.error("Erro ao carregar horários:", err);
+          toast({
+            title: "Erro",
+            description: "Não foi possível carregar os horários do servidor.",
+            variant: "destructive"
+          });
+        });
+  };
+
+  useEffect(() => {
+    fetchSchedules();
   }, []);
 
-  // 🔹 Adicionar horário no banco
+  // 🔹 Adicionar horário no banco - CORRIGIDO
   const handleAddSchedule = async () => {
     if (newRoute && newTime) {
       try {
+        console.log("Enviando dados:", { route: newRoute, schedule: newTime }); // Para debug
+
         const response = await fetch("http://localhost:8080/api/routes/save", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
           body: JSON.stringify({ route: newRoute, schedule: newTime }),
         });
 
+        console.log("Status da resposta:", response.status); // Para debug
+
         if (response.ok) {
-          const saved = await response.json();
-          setSchedules([...schedules, { id: saved.id, route: saved.route, time: saved.schedule }]);
-          toast({ title: "Sucesso", description: "Novo horário salvo no banco." });
+          const contentType = response.headers.get("content-type");
+
+          if (contentType && contentType.includes("application/json")) {
+            const saved: RouteResponse = await response.json();
+
+            // Verifica se é um objeto válido
+            if (saved && saved.id && saved.route && saved.schedule) {
+              setSchedules([...schedules, {
+                id: saved.id,
+                route: saved.route,
+                time: saved.schedule
+              }]);
+              toast({
+                title: "Sucesso",
+                description: "Novo horário salvo no banco."
+              });
+            } else {
+              // Se não for objeto, recarrega a lista
+              fetchSchedules();
+              toast({
+                title: "Sucesso",
+                description: "Novo horário salvo no banco."
+              });
+            }
+          } else {
+            // Se não for JSON, recarrega a lista
+            fetchSchedules();
+            toast({
+              title: "Sucesso",
+              description: "Novo horário salvo no banco."
+            });
+          }
+
           setNewRoute("");
           setNewTime("");
         } else {
-          toast({ title: "Erro", description: "Falha ao salvar no banco.", variant: "destructive" });
+          const errorText = await response.text();
+          console.error("Erro do backend:", errorText); // Para debug
+          toast({
+            title: "Erro",
+            description: errorText || "Falha ao salvar no banco.",
+            variant: "destructive"
+          });
         }
       } catch (error) {
-        console.error(error);
-        toast({ title: "Erro", description: "Falha ao conectar ao servidor.", variant: "destructive" });
+        console.error("Erro de conexão:", error);
+        toast({
+          title: "Erro",
+          description: "Falha ao conectar ao servidor.",
+          variant: "destructive"
+        });
       }
     } else {
-      toast({ title: "Erro", description: "Preencha a rota e o horário.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Preencha a rota e o horário.",
+        variant: "destructive"
+      });
     }
   };
 
-  // 🔹 Remover horário do banco
+  // 🔹 Remover horário do banco - CORRIGIDO
   const handleRemoveSchedule = async (id: number) => {
     try {
       const response = await fetch("http://localhost:8080/api/routes/delete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify({ id }),
       });
 
@@ -97,11 +184,20 @@ export default function AdminDashboardPage() {
         setSchedules(schedules.filter(s => s.id !== id));
         toast({ title: "Sucesso", description: "Horário removido do banco." });
       } else {
-        toast({ title: "Erro", description: "Falha ao excluir no banco.", variant: "destructive" });
+        const errorText = await response.text();
+        toast({
+          title: "Erro",
+          description: errorText || "Falha ao excluir no banco.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error(error);
-      toast({ title: "Erro", description: "Falha ao conectar ao servidor.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Falha ao conectar ao servidor.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -156,11 +252,23 @@ export default function AdminDashboardPage() {
                       <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="route" className="text-right">Rota</Label>
-                          <Input id="route" value={newRoute} onChange={(e) => setNewRoute(e.target.value)} className="col-span-3" placeholder="Ex: Campus I -> Campus II" />
+                          <Input
+                              id="route"
+                              value={newRoute}
+                              onChange={(e) => setNewRoute(e.target.value)}
+                              className="col-span-3"
+                              placeholder="Ex: Campus I -> Campus II"
+                          />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="time" className="text-right">Horário</Label>
-                          <Input id="time" type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="col-span-3" />
+                          <Input
+                              id="time"
+                              type="time"
+                              value={newTime}
+                              onChange={(e) => setNewTime(e.target.value)}
+                              className="col-span-3"
+                          />
                         </div>
                       </div>
                       <DialogFooter>
