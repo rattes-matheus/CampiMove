@@ -35,6 +35,8 @@ public class AuthController {
 
         if (!user.isActive()) return ResponseEntity.status(403).build();
 
+        String profilePictureURL = user.getProfilePictureUrl() == null ? "" : user.getProfilePictureUrl();
+
         return ResponseEntity.ok(
                 Map.of(
                         "id", user.getId(),

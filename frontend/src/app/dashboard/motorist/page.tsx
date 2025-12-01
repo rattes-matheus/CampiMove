@@ -206,7 +206,6 @@ export default function MotoristDashboardPage() {
                                 <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent">
                                     <div>
                                         <p className="font-semibold">Para {travel.destination}</p>
-                                        <p className="text-sm text-muted-foreground">com {travel.motoristName}</p>
                                     </div>
                                     <div className="flex items-center gap-2 text-sm">
                                         <Clock className="h-4 w-4" />
