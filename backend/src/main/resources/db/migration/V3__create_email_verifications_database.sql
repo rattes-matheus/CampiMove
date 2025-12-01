@@ -1,0 +1,6 @@
+CREATE TABLE email_verifications (
+id SERIAL PRIMARY KEY,
+email VARCHAR(150) NOT NULL,
+code CHAR(6) NOT NULL,
+expires_at TIMESTAMP NOT NULL,
+CONSTRAINT fk_user_email FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE)

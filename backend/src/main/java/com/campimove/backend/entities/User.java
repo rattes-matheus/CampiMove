@@ -1,20 +1,16 @@
-package com.campimove.backend.entities; 
+package com.campimove.backend.entities;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import com.campimove.backend.entities.Role;
-
-import jakarta.persistence.*;
-
 @Getter
 @Setter
 @Entity
-@NoArgsConstructor 
+@NoArgsConstructor
 @Table(name = "users")
 public class User {
-    
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
