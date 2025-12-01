@@ -73,27 +73,58 @@ export default function FindARidePage() {
         fetchData();
     }, [router]);
 
-    const handleReportSubmit = () => {
-        const token = localStorage.getItem('jwt_token');
-        if (!token) return router.push("/login");
+        fetchReports();
+    }, [meId, drivers]);
+
+    const handleReportSubmit = async (e: React.FormEvent) => {
         if (selectedMotorist && reportReason.trim()) {
-            console.log(`Denunciando motorista ${selectedMotorist.motorist} por: ${reportReason}`);
-            toast({
-                title: 'Denúncia Enviada',
-                description: `Sua denúncia sobre ${selectedMotorist.motorist} foi enviada para análise.`,
+            e.preventDefault();
+
+            axios.post("http://localhost:8080/api/send-report", {
+                userid: selectedMotorist.id,
+                reporter_id: meId,
+                report_text: reportReason,
+            }).then(() => {
+                setAlreadyReportedMap(prev => ({
+                    ...prev,
+                    [selectedMotorist.id]: true
+                }));
+
+                toast({
+                    title: "Denúncia registrada",
+                    description: `Sua denúncia contra ${selectedMotorist?.motorist} foi recebida com sucesso. Obrigado por ajudar a manter o app seguro.`,
+                });
+                setReportReason("");
+                setSelectedMotorist(null);
+            }).catch((err: any) => {
+                toast({ title: 'Erro', description: 'Erro ao denunciar motorista', variant: 'destructive' });
+                console.log("Can't report driver: ", err.message);
             });
-            setReportReason('');
-            setSelectedMotorist(null);
-            return true;
-        } else {
-            toast({
-                title: 'Erro na Denúncia',
-                description: 'Por favor, preencha o motivo da denúncia.',
-                variant: 'destructive',
-            });
-            return false;
         }
     };
+
+    const checkIfUserAlreadyReported = async (motorist: Driver) => {
+        if (!meId) return;
+
+        setSelectedMotorist(motorist);
+        setReportReason("");
+
+        try {
+            const res = await axios.get(
+                `http://localhost:8080/api/send-report/check?reporterId=${meId}&userid=${motorist.id}`
+            );
+
+            setAlreadyReportedMap(prev => ({
+                ...prev,
+                [motorist.id]: res.data
+            }));
+
+        } catch (err) {
+            console.error("Erro ao checar denúncia:", err);
+        }
+    };
+
+
 
     const filteredTransport = drivers.filter((option) => {
         const typeMatch = transportType === 'all' || option.transportType.toUpperCase() === transportType.toUpperCase();
@@ -191,9 +222,17 @@ export default function FindARidePage() {
                                                         </Button>
                                                     </div>
                                                     <DialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon"
-                                                                onClick={() => setSelectedMotorist(option)}
-                                                                title="Denunciar motorista">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            disabled={alreadyReportedMap[option.id]}   // <-- aqui!
+                                                            title={
+                                                                alreadyReportedMap[option.id]
+                                                                    ? "Você já denunciou este motorista"
+                                                                    : "Denunciar motorista"
+                                                            }
+                                                            onClick={() => checkIfUserAlreadyReported(option)}
+                                                        >
                                                             <ShieldAlert className="h-5 w-5 text-destructive" />
                                                         </Button>
                                                     </DialogTrigger>
