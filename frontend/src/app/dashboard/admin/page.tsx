@@ -17,9 +17,15 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, UserX, PlusCircle, CheckCircle } from 'lucide-react';
+import { Trash2, UserX, PlusCircle, CheckCircle, MoreVertical, Edit, Trash, Ban } from 'lucide-react';
 
 const initialUsers = [
   { id: 'user-1', name: 'João da Silva', email: 'joao.silva@exemplo.com' },
@@ -32,7 +38,6 @@ const initialReports = [
   { id: 'rep-2', reportedMotorist: 'Samuel Wilson', reporter: 'Bruno Lima', reason: 'Veículo em más condições de higiene.' },
 ];
 
-// ADICIONADO: Tipo para a resposta da API
 interface RouteResponse {
   id: number;
   route: string;
@@ -48,7 +53,13 @@ export default function AdminDashboardPage() {
   const [newRoute, setNewRoute] = useState('');
   const [newTime, setNewTime] = useState('');
 
-  // ADICIONADO: Função separada para carregar horários
+  // 🔹 NOVO: Estados para edição
+  const [editingRoute, setEditingRoute] = useState<any>(null);
+  const [editRoute, setEditRoute] = useState('');
+  const [editTime, setEditTime] = useState('');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // 🔹 Função para buscar horários
   const fetchSchedules = () => {
     fetch("http://localhost:8080/api/routes")
         .then(res => {
@@ -58,9 +69,8 @@ export default function AdminDashboardPage() {
           return res.json();
         })
         .then(data => {
-          console.log("Dados recebidos do backend:", data); // Para debug
+          console.log("Dados recebidos do backend:", data);
 
-          // Se o backend retorna { data: [...] }
           const list = Array.isArray(data)
               ? data
               : Array.isArray(data.data)
@@ -89,11 +99,11 @@ export default function AdminDashboardPage() {
     fetchSchedules();
   }, []);
 
-  // 🔹 Adicionar horário no banco - CORRIGIDO
+  // 🔹 Adicionar horário no banco
   const handleAddSchedule = async () => {
     if (newRoute && newTime) {
       try {
-        console.log("Enviando dados:", { route: newRoute, schedule: newTime }); // Para debug
+        console.log("Enviando dados:", { route: newRoute, schedule: newTime });
 
         const response = await fetch("http://localhost:8080/api/routes/save", {
           method: "POST",
@@ -104,7 +114,7 @@ export default function AdminDashboardPage() {
           body: JSON.stringify({ route: newRoute, schedule: newTime }),
         });
 
-        console.log("Status da resposta:", response.status); // Para debug
+        console.log("Status da resposta:", response.status);
 
         if (response.ok) {
           const contentType = response.headers.get("content-type");
@@ -112,7 +122,6 @@ export default function AdminDashboardPage() {
           if (contentType && contentType.includes("application/json")) {
             const saved: RouteResponse = await response.json();
 
-            // Verifica se é um objeto válido
             if (saved && saved.id && saved.route && saved.schedule) {
               setSchedules([...schedules, {
                 id: saved.id,
@@ -124,7 +133,6 @@ export default function AdminDashboardPage() {
                 description: "Novo horário salvo no banco."
               });
             } else {
-              // Se não for objeto, recarrega a lista
               fetchSchedules();
               toast({
                 title: "Sucesso",
@@ -132,7 +140,6 @@ export default function AdminDashboardPage() {
               });
             }
           } else {
-            // Se não for JSON, recarrega a lista
             fetchSchedules();
             toast({
               title: "Sucesso",
@@ -144,7 +151,7 @@ export default function AdminDashboardPage() {
           setNewTime("");
         } else {
           const errorText = await response.text();
-          console.error("Erro do backend:", errorText); // Para debug
+          console.error("Erro do backend:", errorText);
           toast({
             title: "Erro",
             description: errorText || "Falha ao salvar no banco.",
@@ -168,7 +175,7 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // 🔹 Remover horário do banco - CORRIGIDO
+  // 🔹 Remover horário do banco
   const handleRemoveSchedule = async (id: number) => {
     try {
       const response = await fetch("http://localhost:8080/api/routes/delete", {
@@ -188,6 +195,104 @@ export default function AdminDashboardPage() {
         toast({
           title: "Erro",
           description: errorText || "Falha ao excluir no banco.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Erro",
+        description: "Falha ao conectar ao servidor.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // 🔹 NOVO: Deletar TODOS os horários
+  const handleDeleteAllSchedules = async () => {
+    if (!confirm("Tem certeza que deseja excluir TODOS os horários? Esta ação não pode ser desfeita.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8080/api/routes/delete-all", {
+        method: "DELETE",
+        headers: {
+          "Accept": "application/json"
+        },
+      });
+
+      if (response.ok) {
+        setSchedules([]);
+        toast({ title: "Sucesso", description: "Todos os horários foram excluídos." });
+      } else {
+        const errorText = await response.text();
+        toast({
+          title: "Erro",
+          description: errorText || "Falha ao excluir todos os horários.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Erro",
+        description: "Falha ao conectar ao servidor.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // 🔹 NOVO: Abrir modal de edição
+  const handleOpenEditDialog = (schedule: any) => {
+    setEditingRoute(schedule);
+    setEditRoute(schedule.route);
+    // Converte "HH:mm:ss" para "HH:mm" para o input time
+    setEditTime(schedule.time.split(':').slice(0, 2).join(':'));
+    setIsEditDialogOpen(true);
+  };
+
+  // 🔹 NOVO: Salvar edição
+  const handleSaveEdit = async () => {
+    if (!editRoute || !editTime) {
+      toast({
+        title: "Erro",
+        description: "Preencha a rota e o horário.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/routes/update/${editingRoute.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          route: editRoute,
+          schedule: editTime
+        }),
+      });
+
+      if (response.ok) {
+        const updated: RouteResponse = await response.json();
+
+        // Atualiza a lista local
+        setSchedules(schedules.map(s =>
+            s.id === editingRoute.id
+                ? { ...s, route: updated.route, time: updated.schedule }
+                : s
+        ));
+
+        toast({ title: "Sucesso", description: "Horário atualizado com sucesso!" });
+        setIsEditDialogOpen(false);
+      } else {
+        const errorText = await response.text();
+        toast({
+          title: "Erro",
+          description: errorText || "Falha ao atualizar horário.",
           variant: "destructive"
         });
       }
@@ -235,10 +340,10 @@ export default function AdminDashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Gerenciar Horários do Intercampus</CardTitle>
-                <CardDescription>Adicione ou remova horários dos ônibus.</CardDescription>
+                <CardDescription>Adicione, edite ou remova horários dos ônibus.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="mb-4">
+                <div className="mb-4 flex gap-2">
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button>
@@ -278,13 +383,18 @@ export default function AdminDashboardPage() {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
+
+                  {/* 🔹 NOVO: Botão para excluir todos */}
+                  <Button variant="destructive" onClick={handleDeleteAllSchedules}>
+                    <Trash className="mr-2" /> Excluir Todos
+                  </Button>
                 </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Rota</TableHead>
                       <TableHead>Horário</TableHead>
-                      <TableHead className="text-right">Ação</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -298,11 +408,31 @@ export default function AdminDashboardPage() {
                         schedules.map(schedule => (
                             <TableRow key={schedule.id}>
                               <TableCell>{schedule.route}</TableCell>
-                              <TableCell>{schedule.time}</TableCell>
+                              <TableCell>{schedule.time.split(':').slice(0, 2).join(':')}</TableCell>
                               <TableCell className="text-right">
-                                <Button variant="ghost" size="icon" onClick={() => handleRemoveSchedule(schedule.id)}>
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
+                                <div className="flex justify-end gap-2">
+                                  {/* 🔹 NOVO: Menu de 3 pontos */}
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon">
+                                        <MoreVertical className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={() => handleOpenEditDialog(schedule)}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Editar
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                          className="text-destructive"
+                                          onClick={() => handleRemoveSchedule(schedule.id)}
+                                      >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Excluir
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
                               </TableCell>
                             </TableRow>
                         ))
@@ -312,7 +442,46 @@ export default function AdminDashboardPage() {
               </CardContent>
             </Card>
 
-            {/* 🔸 RESTANTE DO SEU CÓDIGO — NOTIFICAÇÕES, DENÚNCIAS E USUÁRIOS — MANTIDO */}
+            {/* 🔸 MODAL DE EDIÇÃO */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Editar Horário</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-route" className="text-right">Rota</Label>
+                    <Input
+                        id="edit-route"
+                        value={editRoute}
+                        onChange={(e) => setEditRoute(e.target.value)}
+                        className="col-span-3"
+                        placeholder="Ex: Campus I -> Campus II"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-time" className="text-right">Horário</Label>
+                    <Input
+                        id="edit-time"
+                        type="time"
+                        value={editTime}
+                        onChange={(e) => setEditTime(e.target.value)}
+                        className="col-span-3"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSaveEdit}>
+                    Salvar Alterações
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* 🔸 RESTANTE DO CÓDIGO MANTIDO */}
             {/* Enviar Notificação */}
             <Card>
               <CardHeader>
