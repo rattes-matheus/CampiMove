@@ -60,11 +60,7 @@ export function DashboardHeader() {
 
             setUsername(response.data.name);
             setEmail(response.data.email);
-            const newURL = "http://localhost:8080" + response.data.profilePictureURL;
-
-            console.log("API URL:", newURL);
-
-            setProfilePictureURL(newURL);
+            setProfilePictureURL("http://localhost:8080" + response.data.profilePictureURL);
 
         } catch (error) {
             console.error('Erro ao buscar dados:', error);

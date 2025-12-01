@@ -31,7 +31,7 @@ public class DriverService {
         for (User user : users) {
             Transport transport = transportRepository.findByMotorist(user.getEmail());
             if (transport != null) {
-                drivers.add(new Driver(user.getId(), user.getRating(), user.getProfilePictureUrl(), transport.getType(), user.getName()));
+                drivers.add(new Driver(user.getId(), user.getRating(), user.getProfilePictureUrl(), transport.getType(), user.getName(), transport.getModel(), transport.getContact()));
             }
         }
 

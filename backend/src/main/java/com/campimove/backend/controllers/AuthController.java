@@ -1,15 +1,14 @@
 package com.campimove.backend.controllers;
 
+import com.campimove.backend.dtos.ChatUserResponseDTO;
 import com.campimove.backend.entities.User;
+import com.campimove.backend.enums.Role;
 import com.campimove.backend.repositories.UserRepository;
 import com.campimove.backend.services.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -46,4 +45,12 @@ public class AuthController {
                 )
         );
     }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<ChatUserResponseDTO> getUserById(@PathVariable Long id) {
+        User user = userRepository.findById(id).get();
+
+        return ResponseEntity.ok(new ChatUserResponseDTO(user.getId(), user.getRole(), user.getProfilePictureUrl(), user.getName()));
+    }
+
 }

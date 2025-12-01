@@ -11,8 +11,6 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-const CURRENT_USER_ID = 1;
-
 type User = {
     id: number;
     name: string;
@@ -47,11 +45,11 @@ export default function EditProfilePage() {
             setEmail(response.data.email);
             setId(response.data.id);
 
-            console.log(response.data)
-
             if (response.data.profilePictureURL) {
-                setCurrentImageUrl("http://localhost:8080" + response.data.profilePictureURL);
+                setCurrentImageUrl("http://localhost:8080"  + response.data.profilePictureURL);
+                console.log(currentImageUrl)
             }
+
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
             toast({
@@ -61,7 +59,6 @@ export default function EditProfilePage() {
             });
         } finally {
             setIsLoading(false);
-            console.log(currentImageUrl)
         }
     }, [baseUrlForDisplay, toast]);
 
@@ -128,9 +125,9 @@ export default function EditProfilePage() {
             );
 
             if (response.data.profilePictureUrl) {
-
-                const newUrl = baseUrlForDisplay + response.data.profilePictureUrl + `?t=${Date.now()}`;
+                const newUrl = "http://localhost:8080" + response.data.profilePictureUrl;
                 setCurrentImageUrl(newUrl);
+                console.log(newUrl)
             }
 
             toast({
@@ -178,7 +175,6 @@ export default function EditProfilePage() {
                                                     {name ? name[0].toUpperCase() : 'U'}
                                                 </AvatarFallback>
                                             </Avatar>
-
 
                                             <label
                                                 htmlFor="avatar-upload"

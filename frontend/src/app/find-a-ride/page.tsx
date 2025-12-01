@@ -39,8 +39,6 @@ export default function FindARidePage() {
     const [minRating, setMinRating] = useState(0);
     const [selectedMotorist, setSelectedMotorist] = useState<Driver | null>(null);
     const [reportReason, setReportReason] = useState('');
-    const [alreadyReportedMap, setAlreadyReportedMap] = useState<Record<number, boolean>>({});
-    const [meId, setMeId] = useState<number | null>(null);
     const { toast } = useToast();
     const router = useRouter();
 
@@ -48,13 +46,16 @@ export default function FindARidePage() {
         const fetchData = async () => {
             let token = null;
             if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+            if (!token) {
+                router.push("/login");
+                return;
+            }
 
             try {
                 const res = await axios.get("http://localhost:8080/auth/me", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const userRole = res.data.role;
-                setMeId(res.data.id);
 
                 if (userRole === "DRIVER") {
                     router.push("/dashboard/motorist");
@@ -66,31 +67,11 @@ export default function FindARidePage() {
 
             } catch (error) {
                 console.error("Failed to fetch data", error);
+                router.push("/login");
             }
         };
-
         fetchData();
     }, [router]);
-
-    useEffect(() => {
-        if (!meId || drivers.length === 0) return;
-
-        const fetchReports = async () => {
-            const map: Record<number, boolean> = {};
-
-            for (const driver of drivers) {
-                try {
-                    const res = await axios.get(
-                        `http://localhost:8080/api/send-report/check?reporterId=${meId}&userid=${driver.id}`
-                    );
-                    map[driver.id] = res.data;
-                } catch {
-                    map[driver.id] = false;
-                }
-            }
-
-            setAlreadyReportedMap(map);
-        };
 
         fetchReports();
     }, [meId, drivers]);
