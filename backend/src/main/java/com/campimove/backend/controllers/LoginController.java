@@ -32,6 +32,9 @@ public class LoginController {
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) return ResponseEntity.status(401).body(Map.of("error", "Email ou senha incorretos"));
 
+        if (!user.isVerified()) return ResponseEntity.status(403).body((Map.of("error", "Email nao verificado")));
+
+        if (!user.isActive()) return ResponseEntity.status(403).body(Map.of("error", "Conta banida"));
         String jwtToken = jwtService.generateToken(user);
 
         return ResponseEntity.ok(new LoginResponse(jwtToken, user.getRole()));
