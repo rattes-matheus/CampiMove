@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.campimove.backend.dto.IntercampiRoutesFormDTO;
-import com.campimove.backend.entities.IntercampiRoute.IntercampiRoute;
-import com.campimove.backend.entities.IntercampiRoute.IntercampiRouteRepository;
+import com.campimove.backend.dtos.IntercampiRoutesFormDTO;
+import com.campimove.backend.entities.IntercampiRoute;
+import com.campimove.backend.repositories.IntercampiRouteRepository;
 
 @RestController
 @RequestMapping("/api/routes")

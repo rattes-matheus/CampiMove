@@ -1,25 +1,26 @@
 # CampiMove: Sistema de Mobilidade do CEFET
+
 O **CampiMove** tem como objetivo melhorar a mobilidade para os campi do CEFET, a partir do gerenciamento dos ônibus oficiais da instituição e de transportes alternativos. O sistema permitirá que alunos, professores, motoristas, administradores e fornecedores interajam para garantir um transporte eficiente e acessível.
 
-## Equipe de Desenvolvimento
+## 👥 Equipe de Desenvolvimento
 | Ordem | Nome                 |
 |:------|:---------------------|
 | 1     | Bruno Frade          |
 | 2     | Francisco Eduardo    |
-| 3     | Gabriela Pacheco    |
+| 3     | Gabriela Pacheco     |
 | 4     | Matheus Rattes       |
 | 5     | Pedro Peixoto        |
 
-## Atores do Sistema
-| Ator                        | Definição                                                                 |
+## 🧩 Atores do Sistema
+| Ator                        | Descrição                                                                 |
 |:----------------------------|:--------------------------------------------------------------------------|
-| Aluno                       | Usuário que utilizará os ônibus e transportes alternativos.               |
-| Administrador               | Usuário que administra o sistema, atualizando horários, notícias, etc.    |
-| Motorista                   | Usuário que dirige o ônibus e atualiza sua localização.                   |
-| Fornecedor de transporte     | Usuário que disponibiliza transportes alternativos como vans ou micro-ônibus. |
-| Professor                   | Usuário que utiliza os transportes e pode reservar o intercampi para uso didático. |
+| Aluno                       | Utiliza ônibus e transportes alternativos.                                |
+| Administrador               | Gerencia horários, notícias, usuários e cadastros.                        |
+| Motorista                   | Atualiza a localização e os imprevistos do ônibus.                        |
+| Fornecedor de transporte    | Disponibiliza veículos alternativos.                                      |
+| Professor                   | Utiliza transportes e pode reservar o intercampi.                         |
 
-## Requisitos Funcionais
+## 📌 Requisitos Funcionais
 | Id     | Ator                                        | Descrição                                                            |
 |:-------|:--------------------------------------------|:---------------------------------------------------------------------|
 | REQ001 | Administrador                               | Cadastrar horários dos ônibus.                                       |
@@ -44,7 +45,7 @@ O **CampiMove** tem como objetivo melhorar a mobilidade para os campi do CEFET, 
 | REQ020 | Fornecedor de transporte alternativo        | Enviar cadastro para o administrador.                                |
 | REQ021 | Fornecedor de transporte alternativo, aluno, professor | Enviar mensagens ao motorista.                            |
 
-## Regras de Negócio
+## 📜 Regras de Negócio
 | Id     | Nome                       | Descrição                                                                 |
 |:-------|:---------------------------|:--------------------------------------------------------------------------|
 | RN001  | Localização do ônibus oficial | O motorista deve atualizar a localização do ônibus a cada parada.         |
@@ -57,43 +58,51 @@ O **CampiMove** tem como objetivo melhorar a mobilidade para os campi do CEFET, 
 | RN008  | Login de fornecedor        | O fornecedor só pode enviar cadastro, sem acesso total ao sistema.       |
 | RN009  | Login de aluno             | O aluno precisa logar para usar o sistema.                               |
 
-## Casos de Uso
-| Id     | Nome                                     | Requisitos                        | Regras de Negócio                |
-|:-------|:-----------------------------------------|:----------------------------------|:---------------------------------|
-| CSU01  | Cadastrar horários dos ônibus            | REQ001                            | RN003                            |
-| CSU02  | Consultar horários dos ônibus            | REQ002                            | RN009, RN003, RN006              |
-| CSU03  | Cadastrar transporte alternativo         | REQ004                            | RN003                            |
-| CSU04  | Consultar transportes alternativos       | REQ005, REQ019                    | RN009, RN003, RN006              |
-| CSU05  | Atualizar horário de chegada do ônibus   | REQ006                            | RN002                            |
-| CSU06  | Denunciar usuários                       | REQ010                            | RN004, RN009                     |
-| CSU07  | Remover horário do ônibus                | REQ001                            | RN003                            |
-| CSU08  | Notificar usuários                       | REQ012                            | RN003                            |
-| CSU09  | Avaliar transporte alternativo           | REQ011, REQ014, REQ018            | RN005, RN004                     |
-| CSU10  | Cadastrar conta por tipo de usuário      | REQ015                            | RN009, RN002, RN003, RN006       |
-| CSU11  | Banir usuários                           | REQ010                            | RN004, RN003                     |
-| CSU12  | Reservar transporte alternativo          | REQ019                            | RN009                            |
-| CSU13  | Editar perfil de usuário                 | REQ016                            | RN009                            |
-| CSU14  | Login                                    | REQ015                            | RN009, RN002, RN003, RN006       |
-| CSU15  | Recuperar senha                          | REQ015                            | RN002                            |
-| CSU16  | Mandar e receber mensagens de motoristas | REQ021                            | RN008, RN006, RN009              |
+## 📂 Casos de Uso  
 
-## Planejamento
-| Sprint | Caso de Uso | Desenvolvedor                |
-|:-------|:-------------|:-----------------------------|
-|    1   |   CSU01   |  Francisco Eduardo   |
-|    2   |   CSU02   |  Gabriela Pacheco    |
-|    1   |   CSU03   |  Matheus Rattes      |
-|    3   |   CSU04   |  Gabriela Pacheco    |
-|    1   |   CSU05   |  Bruno Frade         |
-|    2   |   CSU06   |  Matheus Rattes      |
-|    2   |   CSU07   |  Francisco Eduardo   |
-|    3   |   CSU08   |  Matheus Rattes      |
-|    3   |   CSU09   |  Francisco Eduardo   |
-|    1   |   CSU10   |  Pedro Peixoto       |
-|    2   |   CSU11   |  Matheus Rattes      |
-|    3   |   CSU12   |  Bruno Frade         |
-|    1   |   CSU13   |  Gabriela Pacheco    |
-|    2   |   CSU14   |  Pedro Peixoto       |
-|    3   |   CSU15   |  Pedro Peixoto       |
-|    2   |   CSU16   |  Bruno Frade         |
+| ID     | Nome                                             |
+|--------|--------------------------------------------------|
+| CSU01 | Cadastrar horários dos ônibus |
+| CSU02 | Consultar horários dos ônibus |
+| CSU03 | Cadastrar transporte alternativo |
+| CSU04 | Consultar transportes alternativos com filtros |
+| CSU05 | Atualizar horário de chegada do ônibus oficial |
+| CSU06 | Denunciar usuários |
+| CSU07 | Remover horário do ônibus |
+| CSU08 | Cadastrar ônibus |
+| CSU09 | Notificar usuários |
+| CSU10 | Avaliar transporte alternativo |
+| CSU11 | Cadastrar conta por tipo de usuário com confirmação de email |
+| CSU12 | Banir usuários |
+| CSU13 | Reservar transporte alternativo |
+| CSU14 | Editar perfil de usuário |
+| CSU15 | Login |
+| CSU16 | Recuperar senha |
+| CSU17 | Mandar e receber mensagens de motoristas |
+| CSU18 | Logout |
+| CSU19 | Listar usuários cadastrados |
+
+## 🗂 Planejamento por Sprint  
+
+| Sprint | Caso de Uso | Desenvolvedor        |
+|--------|-------------|----------------------|
+| 1      | CSU01       | Francisco Eduardo    |
+| 2      | CSU02       | Gabriela Pacheco     |
+| 1      | CSU03       | Matheus Rattes       |
+| 3      | CSU04       | Gabriela Pacheco     |
+| 1      | CSU05       | Bruno Frade          |
+| 2      | CSU06       | Matheus Rattes       |
+| 2      | CSU07       | Francisco Eduardo    |
+| 3      | CSU08       | Matheus Rattes       |
+| 3      | CSU09       | Francisco Eduardo    |
+| 1      | CSU10       | Pedro Peixoto        |
+| 2      | CSU11       | Matheus Rattes       |
+| 3      | CSU12       | Bruno Frade          |
+| 1      | CSU13       | Gabriela Pacheco     |
+| 2      | CSU14       | Pedro Peixoto        |
+| 3      | CSU15       | Pedro Peixoto        |
+| 2      | CSU16       | Bruno Frade          |
+| 2      | CSU17       | Bruno Frade          |
+| 3      | CSU18       | Bruno Frade          |
+| 2      | CSU19       | Matheus Rattes       |
 
