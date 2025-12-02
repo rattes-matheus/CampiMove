@@ -350,9 +350,6 @@ export default function ChatPage() {
             status: 'Agendada'
         };
 
-        const existingTravels = JSON.parse(localStorage.getItem('acceptedTravels') || '[]');
-        localStorage.setItem('acceptedTravels', JSON.stringify([...existingTravels, acceptedTravel]));
-
         if (recipientUser && userId && username) {
             const acceptedMessage: Message = {
                 senderId: userId.toString(),

@@ -37,7 +37,7 @@ public class TravelService {
             return Collections.emptyList();
         }
 
-        List<ChatMessageEntity> proposalMessages = repository.findProposalMessagesByRoomIds(acceptedRoomIds);
+        List<ChatMessageEntity> proposalMessages = repository.findProposalMessagesByAcceptedRoomIds(acceptedRoomIds);
 
         return proposalMessages.stream().map(message -> {
             try {
@@ -73,7 +73,7 @@ public class TravelService {
             return Collections.emptyList();
         }
 
-        List<ChatMessageEntity> proposalMessages = repository.findProposalMessagesByRoomIds(acceptedRoomIds);
+        List<ChatMessageEntity> proposalMessages = repository.findProposalMessagesByAcceptedRoomIds(acceptedRoomIds);
 
         return proposalMessages.stream().map(message -> {
             try {

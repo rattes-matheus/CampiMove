@@ -169,7 +169,7 @@ export default function DashboardPage() {
                             <CardDescription>Suas viagens agendadas.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {nextTravels.length > 0 ? nextTravels.map((travel, index) => (
+                            { nextTravels.length > 0 ? nextTravels.map((travel, index) => (
                                 <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent">
                                     <div>
                                         <p className="font-semibold">{travel.destination}</p>
