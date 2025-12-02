@@ -20,8 +20,26 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Trash2, UserX, PlusCircle, CheckCircle, MoreVertical, Edit, Trash, Ban } from 'lucide-react';
+
+const initialUsers = [
+  { id: 'user-1', name: 'João da Silva', email: 'joao.silva@exemplo.com' },
+  { id: 'user-2', name: 'Maria Souza', email: 'maria.souza@exemplo.com' },
+  { id: 'user-3', name: 'Pedro Santos', email: 'pedro.santos@exemplo.com' },
+];
+
+const initialReports = [
+  { id: 'rep-1', reportedMotorist: 'João da Silva', reporter: 'Ana Clara', reason: 'Direção perigosa e velocidade excessiva.' },
+  { id: 'rep-2', reportedMotorist: 'Samuel Wilson', reporter: 'Bruno Lima', reason: 'Veículo em más condições de higiene.' },
+];
 import { Trash2, UserX, PlusCircle, ShieldX, CheckCircle } from 'lucide-react';
 import axios from "axios";
 
@@ -39,6 +57,12 @@ type User = {
   role: string;
   active: boolean;
 };
+
+interface RouteResponse {
+  id: number;
+  route: string;
+  schedule: string;
+}
 
 export default function AdminDashboardPage() {
   const { toast } = useToast();
@@ -81,51 +105,262 @@ export default function AdminDashboardPage() {
     fetchData();
   }, [modified, router]);
 
-  const handleAddSchedule = () => {
-    const token = localStorage.getItem('jwt_token');
-    if (!token) return router.push("/login");
+  // 🔹 NOVO: Estados para edição
+  const [editingRoute, setEditingRoute] = useState<any>(null);
+  const [editRoute, setEditRoute] = useState('');
+  const [editTime, setEditTime] = useState('');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
+  // 🔹 Função para buscar horários
+  const fetchSchedules = () => {
+    fetch("http://localhost:8080/api/routes")
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
+        .then(data => {
+          console.log("Dados recebidos do backend:", data);
+
+          const list = Array.isArray(data)
+              ? data
+              : Array.isArray(data.data)
+                  ? data.data
+                  : [];
+
+          const formatted = list.map((r: any) => ({
+            id: r.id,
+            route: r.route,
+            time: r.schedule
+          }));
+
+          setSchedules(formatted);
+        })
+        .catch(err => {
+          console.error("Erro ao carregar horários:", err);
+          toast({
+            title: "Erro",
+            description: "Não foi possível carregar os horários do servidor.",
+            variant: "destructive"
+          });
+        });
+  };
+
+  useEffect(() => {
+    fetchSchedules();
+  }, []);
+
+  // 🔹 Adicionar horário no banco
+  const handleAddSchedule = async () => {
     if (newRoute && newTime) {
-      axios.post("http://localhost:8080/api/routes", {
-        route: newRoute,
-        schedule: newTime + ":00"
-      }).then(() => {
-        toast({ title: 'Sucesso', description: 'Novo horário adicionado.' });
-        setModified(modified + 1);
-      }).catch(() => {
-        toast({ title: 'Erro', description: 'Erro ao criar o horário.', variant: 'destructive' });
-      }).finally(() => {
-        setNewRoute('');
-        setNewTime('');
-      });
+      try {
+        console.log("Enviando dados:", { route: newRoute, schedule: newTime });
+
+        const response = await fetch("http://localhost:8080/api/routes/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({ route: newRoute, schedule: newTime }),
+        });
+
+        console.log("Status da resposta:", response.status);
+
+        if (response.ok) {
+          const contentType = response.headers.get("content-type");
+
+          if (contentType && contentType.includes("application/json")) {
+            const saved: RouteResponse = await response.json();
+
+            if (saved && saved.id && saved.route && saved.schedule) {
+              setSchedules([...schedules, {
+                id: saved.id,
+                route: saved.route,
+                time: saved.schedule
+              }]);
+              toast({
+                title: "Sucesso",
+                description: "Novo horário salvo no banco."
+              });
+            } else {
+              fetchSchedules();
+              toast({
+                title: "Sucesso",
+                description: "Novo horário salvo no banco."
+              });
+            }
+          } else {
+            fetchSchedules();
+            toast({
+              title: "Sucesso",
+              description: "Novo horário salvo no banco."
+            });
+          }
+
+          setNewRoute("");
+          setNewTime("");
+        } else {
+          const errorText = await response.text();
+          console.error("Erro do backend:", errorText);
+          toast({
+            title: "Erro",
+            description: errorText || "Falha ao salvar no banco.",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error("Erro de conexão:", error);
+        toast({
+          title: "Erro",
+          description: "Falha ao conectar ao servidor.",
+          variant: "destructive"
+        });
+      }
     } else {
-      toast({ title: 'Erro', description: 'Preencha rota e horário.', variant: 'destructive' });
+      toast({
+        title: "Erro",
+        description: "Preencha a rota e o horário.",
+        variant: "destructive"
+      });
     }
   };
 
-  const handleRemoveSchedule = (id: number) => {
-    const token = localStorage.getItem('jwt_token');
-    if (!token) return router.push("/login");
-
-    axios.post("http://localhost:8080/api/routes/delete", { id })
-      .then(() => {
-        toast({ title: 'Sucesso', description: 'Horário removido.' });
-        setModified(modified + 1);
-      })
-      .catch(() => {
-        toast({ title: 'Erro', description: 'Erro ao remover horário.', variant: 'destructive' });
+  // 🔹 Remover horário do banco
+  const handleRemoveSchedule = async (id: number) => {
+    try {
+      const response = await fetch("http://localhost:8080/api/routes/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ id }),
       });
+
+      if (response.ok) {
+        setSchedules(schedules.filter(s => s.id !== id));
+        toast({ title: "Sucesso", description: "Horário removido do banco." });
+      } else {
+        const errorText = await response.text();
+        toast({
+          title: "Erro",
+          description: errorText || "Falha ao excluir no banco.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Erro",
+        description: "Falha ao conectar ao servidor.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDismissReport = (id: number) => {
-    axios.delete(`http://localhost:8080/api/admin/reports/actions/${id}/ignore`)
-      .then(() => {
-        toast({ title: "Sucesso", description: "Denúncia removida." });
-        setModified(modified + 1);
-      })
-      .catch(() => {
-        toast({ title: 'Erro', description: 'Erro ao deletar denúncia.', variant: 'destructive' });
+  // 🔹 NOVO: Deletar TODOS os horários
+  const handleDeleteAllSchedules = async () => {
+    if (!confirm("Tem certeza que deseja excluir TODOS os horários? Esta ação não pode ser desfeita.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8080/api/routes/delete-all", {
+        method: "DELETE",
+        headers: {
+          "Accept": "application/json"
+        },
       });
+
+      if (response.ok) {
+        setSchedules([]);
+        toast({ title: "Sucesso", description: "Todos os horários foram excluídos." });
+      } else {
+        const errorText = await response.text();
+        toast({
+          title: "Erro",
+          description: errorText || "Falha ao excluir todos os horários.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Erro",
+        description: "Falha ao conectar ao servidor.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // 🔹 NOVO: Abrir modal de edição
+  const handleOpenEditDialog = (schedule: any) => {
+    setEditingRoute(schedule);
+    setEditRoute(schedule.route);
+    // Converte "HH:mm:ss" para "HH:mm" para o input time
+    setEditTime(schedule.time.split(':').slice(0, 2).join(':'));
+    setIsEditDialogOpen(true);
+  };
+
+  // 🔹 NOVO: Salvar edição
+  const handleSaveEdit = async () => {
+    if (!editRoute || !editTime) {
+      toast({
+        title: "Erro",
+        description: "Preencha a rota e o horário.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/routes/update/${editingRoute.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          route: editRoute,
+          schedule: editTime
+        }),
+      });
+
+      if (response.ok) {
+        const updated: RouteResponse = await response.json();
+
+        // Atualiza a lista local
+        setSchedules(schedules.map(s =>
+            s.id === editingRoute.id
+                ? { ...s, route: updated.route, time: updated.schedule }
+                : s
+        ));
+
+        toast({ title: "Sucesso", description: "Horário atualizado com sucesso!" });
+        setIsEditDialogOpen(false);
+      } else {
+        const errorText = await response.text();
+        toast({
+          title: "Erro",
+          description: errorText || "Falha ao atualizar horário.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Erro",
+        description: "Falha ao conectar ao servidor.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDismissReport = (id: string) => {
+    setReports(reports.filter(r => r.id !== id));
+    toast({ title: 'Sucesso', description: 'Denúncia dispensada.' });
   };
 
   const handleSendNotification = () => {
