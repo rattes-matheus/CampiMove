@@ -350,6 +350,8 @@ export default function ChatPage() {
             status: 'Agendada'
         };
 
+        console.log(proposal)
+
         if (recipientUser && userId && username) {
             const acceptedMessage: Message = {
                 senderId: userId.toString(),
@@ -368,6 +370,10 @@ export default function ChatPage() {
 
             axios.put("http://localhost:8080/travels/status", {
                 id: roomId,
+                origin: proposal.origin,
+                destination: proposal.destination,
+                price: proposal.price,
+                schedule: proposal.schedule,
                 status: true
             }, {
                 headers: {Authorization: `Bearer ${token}`}
