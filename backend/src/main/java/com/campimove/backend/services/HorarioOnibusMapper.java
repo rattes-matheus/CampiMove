@@ -1,6 +1,6 @@
-package com.campimove.backend.service;
+package com.campimove.backend.services;
 
-import com.campimove.backend.dto.HorarioOnibusResponse;
+import com.campimove.backend.dtos.HorarioOnibusResponse;
 import com.campimove.backend.entities.HorarioOnibus;
 import org.springframework.stereotype.Component;
 

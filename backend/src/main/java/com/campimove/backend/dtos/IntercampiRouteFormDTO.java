@@ -1,4 +1,4 @@
-package com.campimove.backend.dto;
+package com.campimove.backend.dtos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalTime;

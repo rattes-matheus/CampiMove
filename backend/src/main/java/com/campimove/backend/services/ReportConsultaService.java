@@ -1,7 +1,7 @@
-package com.campimove.backend.service;
+package com.campimove.backend.services;
 
 import com.campimove.backend.entities.Report;
-import com.campimove.backend.repository.ReportRepository;
+import com.campimove.backend.repositories.ReportRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

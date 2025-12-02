@@ -1,12 +1,12 @@
-package com.campimove.backend.controller;
+package com.campimove.backend.controllers;
 
-import com.campimove.backend.dto.CriarHorarioRequest;
-import com.campimove.backend.dto.HorarioOnibusResponse;
-import com.campimove.backend.dto.InfoRotaResponse;
+import com.campimove.backend.dtos.CriarHorarioRequest;
+import com.campimove.backend.dtos.HorarioOnibusResponse;
+import com.campimove.backend.dtos.InfoRotaResponse;
 import com.campimove.backend.entities.HorarioOnibus;
-import com.campimove.backend.service.HorarioOnibusConsultaService;
-import com.campimove.backend.service.HorarioOnibusGestaoService;
-import com.campimove.backend.service.HorarioOnibusMapper;
+import com.campimove.backend.services.HorarioOnibusConsultaService;
+import com.campimove.backend.services.HorarioOnibusGestaoService;
+import com.campimove.backend.services.HorarioOnibusMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/horarios-onibus")
-@CrossOrigin(origins = "http://localhost:3000")
+@RequestMapping("/horarios-onibus")
 public class HorarioOnibusController {
     
     private final HorarioOnibusConsultaService consultaService;

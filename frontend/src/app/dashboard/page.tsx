@@ -5,7 +5,7 @@ import {DashboardHeader} from '@/components/dashboard/header';
 import {Footer} from '@/components/landing/footer';
 import {Card, CardContent, CardHeader, CardTitle, CardDescription} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
-import {Bus, CalendarPlus, Clock, Star} from 'lucide-react';
+import {Bus, CalendarPlus, Clock, Star, Route} from 'lucide-react';
 import Link from 'next/link';
 import {
     Dialog,
@@ -198,6 +198,23 @@ export default function DashboardPage() {
                                 <Link href="/find-a-ride">
                                     Encontrar Carona
                                 </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card
+                        className="hover:shadow-lg cursor-pointer "
+                        onClick={() => window.location.href = '/bus-schedule'}
+                    >
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-lg font-medium">Horários de Ônibus</CardTitle>
+                            <Route className="h-6 w-6 text-orange-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-4xl font-bold text-green-600">07:30</div>
+                            <p className="text-xs text-muted-foreground">Próximo ônibus Campus I → II</p>
+                            <Button className="w-full mt-3 bg-orange-500 hover:bg-orange-600 text-white">
+                                Ver Horários Completos
                             </Button>
                         </CardContent>
                     </Card>

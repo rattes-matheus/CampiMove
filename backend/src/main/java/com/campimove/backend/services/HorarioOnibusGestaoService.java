@@ -1,7 +1,7 @@
-package com.campimove.backend.service;
+package com.campimove.backend.services;
 
 import com.campimove.backend.entities.HorarioOnibus;
-import com.campimove.backend.repository.HorarioOnibusRepository;
+import com.campimove.backend.repositories.HorarioOnibusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

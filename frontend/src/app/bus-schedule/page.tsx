@@ -256,7 +256,7 @@ const BusSchedulePage = () => {
                 
                 console.log('🔍 Tentando conectar com:', API_BASE_URL);
                 
-                const horariosResponse = await axios.get(`${API_BASE_URL}/api/horarios-onibus/${routeKey}`);
+                const horariosResponse = await axios.get(`${API_BASE_URL}/horarios-onibus/${routeKey}`);
                 console.log('📅 RESPOSTA COMPLETA DA API:', horariosResponse);
                 console.log('📅 DADOS RECEBIDOS:', horariosResponse.data);
                 console.log('📅 TIPO DOS DADOS:', typeof horariosResponse.data);

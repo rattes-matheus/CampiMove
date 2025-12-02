@@ -1,6 +1,6 @@
-package com.campimove.backend.service;
+package com.campimove.backend.services;
 
-import com.campimove.backend.dto.ReportResponse;
+import com.campimove.backend.dtos.ReportResponse;
 import com.campimove.backend.entities.Report;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +10,7 @@ public class ReportMapper {
     public ReportResponse toResponse(Report report) {
         return new ReportResponse(
                 report.getId(),
-                report.getUserId(),
+                report.getUserid(),
                 report.getType(),
                 report.getDescription(),
                 report.getRoute(),

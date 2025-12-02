@@ -1,10 +1,17 @@
 package com.campimove.backend.entities;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalTime;
 
 @Entity
 @Table(name = "horarios_onibus")
+@Getter
+@Setter
+@NoArgsConstructor
 public class HorarioOnibus {
     
     @Id
@@ -19,24 +26,9 @@ public class HorarioOnibus {
     
     @Column(name = "ativo", nullable = false)
     private boolean ativo = true;
-    
-   
-    public HorarioOnibus() {}
-    
+
     public HorarioOnibus(String origem, LocalTime horario) {
         this.origem = origem;
         this.horario = horario;
     }
-    
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
-    public String getOrigem() { return origem; }
-    public void setOrigem(String origem) { this.origem = origem; }
-    
-    public LocalTime getHorario() { return horario; }
-    public void setHorario(LocalTime horario) { this.horario = horario; }
-    
-    public boolean isAtivo() { return ativo; }
-    public void setAtivo(boolean ativo) { this.ativo = ativo; }
 }

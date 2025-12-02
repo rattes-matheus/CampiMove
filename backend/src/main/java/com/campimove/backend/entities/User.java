@@ -37,9 +37,6 @@ public class User {
     private String name;
 
     @Column(name = "profile_picture_url")
-    private String profilePictureUrl; 
-
-    @Column(name = "profile_picture_url")
     private String profilePictureUrl;
 
     @Column(name = "rating")

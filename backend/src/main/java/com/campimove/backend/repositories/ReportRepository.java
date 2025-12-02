@@ -1,4 +1,4 @@
-package com.campimove.backend.repository;
+package com.campimove.backend.repositories;
 
 import com.campimove.backend.entities.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
