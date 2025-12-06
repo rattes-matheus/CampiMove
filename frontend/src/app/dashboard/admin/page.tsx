@@ -129,16 +129,36 @@ export default function AdminDashboardPage() {
       });
   };
 
-  const handleSendNotification = () => {
+  const handleSendNotification = (title: string, message: string) => {
     const token = localStorage.getItem('jwt_token');
     if (!token) return router.push("/login");
 
-    if (notification.trim()) {
-      toast({ title: 'Sucesso', description: 'Notificação enviada.' });
-      setNotification('');
-    } else {
-      toast({ title: 'Erro', description: 'A notificação não pode estar vazia.', variant: 'destructive' });
+    if (!notificationTitle.trim() || !notification.trim()) {
+      return toast({
+        title: "Erro",
+        description: "Preencha título e mensagem.",
+        variant: "destructive"
+      });
     }
+
+    axios.post("http://localhost:8080/api/notifications", { title: notificationTitle, message: notification })
+      .then(() => {
+        toast({
+          title: "Sucesso",
+          description: "Notificação enviada."
+        });
+
+        setNotification("");
+        setNotificationTitle("");
+        setModified(prev => prev + 1);
+      })
+      .catch(() => {
+        toast({
+          title: "Erro",
+          description: "Falha ao enviar notificação.",
+          variant: "destructive"
+        });
+      });
   };
 
   const handleBanUserFromReport = (reportId: number, userId: number) => {
@@ -264,7 +284,7 @@ export default function AdminDashboardPage() {
                   rows={5}
                 />
 
-                <Button className="w-full" onClick={handleSendNotification}>
+                <Button className="w-full" onClick={() => handleSendNotification(notificationTitle, notification)}>
                   Enviar
                 </Button>
               </div>

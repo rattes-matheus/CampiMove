@@ -2,40 +2,25 @@
 
 import Link from 'next/link';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 import { useRouter, usePathname } from 'next/navigation';
 import { Bell } from 'lucide-react';
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import {toast} from "@/hooks/use-toast";
-
-const notifications = [
-    {
-        title: "Sua carona foi confirmada!",
-        description: "João da Silva irá te buscar às 14:00.",
-    },
-    {
-        title: "Lembrete: Ônibus Intercampus",
-        description: "O próximo ônibus sai em 15 minutos.",
-    },
-    {
-        title: "Nova carona disponível",
-        description: "Uma nova opção de carona corresponde à sua rota.",
-    },
-];
+import { toast } from "@/hooks/use-toast";
 
 export function DashboardHeader() {
     const router = useRouter();
-
+    const [notifications, setNotification] = useState<{ title: string, message: string }[]>([]);
     let token: any = null;
 
     if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
@@ -52,7 +37,7 @@ export function DashboardHeader() {
 
     async function fetchData() {
         try {
-            const response = await axios.get<{email: string, name: string}>(`http://localhost:8080/auth/me`, {
+            const response = await axios.get<{ email: string, name: string }>(`http://localhost:8080/auth/me`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -61,6 +46,10 @@ export function DashboardHeader() {
             setUsername(response.data.name);
             setEmail(response.data.email);
             setProfilePictureURL("http://localhost:8080" + response.data.profilePictureURL);
+
+            const notificationsRes = await axios.get("http://localhost:8080/api/notifications");
+
+            setNotification(notificationsRes.data);
 
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
@@ -96,15 +85,16 @@ export function DashboardHeader() {
                                 <DropdownMenuLabel>Notificações</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 {notifications.length > 0 ? (
-                                    notifications.map((notification, index) => (
+                                    notifications.map((n, index) => (
                                         <DropdownMenuItem key={index} className="flex flex-col items-start gap-1">
-                                            <p className="font-semibold">{notification.title}</p>
-                                            <p className="text-xs text-muted-foreground">{notification.description}</p>
+                                            <p className="font-semibold">{n.title}</p>
+                                            <p className="text-xs text-muted-foreground">{n.message}</p>
                                         </DropdownMenuItem>
                                     ))
                                 ) : (
                                     <DropdownMenuItem>Nenhuma nova notificação</DropdownMenuItem>
                                 )}
+
                             </DropdownMenuContent>
                         </DropdownMenu>
 
