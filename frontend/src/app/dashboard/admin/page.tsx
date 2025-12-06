@@ -46,6 +46,7 @@ export default function AdminDashboardPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [reports, setReports] = useState<UserReport[]>([]);
   const [notification, setNotification] = useState('');
+  const [notificationTitle, setNotificationTitle] = useState('');
   const [newRoute, setNewRoute] = useState('');
   const [newTime, setNewTime] = useState('');
   const [modified, setModified] = useState(0);
@@ -249,13 +250,24 @@ export default function AdminDashboardPage() {
               <CardDescription>Mensagem global para todos os usuários.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Textarea
-                placeholder="Digite sua mensagem..."
-                value={notification}
-                onChange={(e) => setNotification(e.target.value)}
-                rows={5}
-              />
-              <Button className="w-full" onClick={handleSendNotification}>Enviar</Button>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Título da notificação"
+                  value={notificationTitle}
+                  onChange={(e) => setNotificationTitle(e.target.value)}
+                />
+
+                <Textarea
+                  placeholder="Mensagem..."
+                  value={notification}
+                  onChange={(e) => setNotification(e.target.value)}
+                  rows={5}
+                />
+
+                <Button className="w-full" onClick={handleSendNotification}>
+                  Enviar
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
