@@ -20,7 +20,7 @@ import { toast } from "@/hooks/use-toast";
 
 export function DashboardHeader() {
     const router = useRouter();
-    const [notifications, setNotification] = useState<{ title: string, message: string }[]>([]);
+    const [notifications, setNotification] = useState<{ title: string, message: string, createdAt: string }[]>([]);
     let token: any = null;
 
     if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
@@ -61,6 +61,20 @@ export function DashboardHeader() {
         }
     }
 
+    function formatDate(dateString: string) {
+        const date = new Date(dateString);
+
+        const dia = String(date.getDate()).padStart(2, '0');
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const ano = date.getFullYear();
+
+        const hora = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+
+        return `${dia}/${mes}/${ano} ${hora}:${min}`;
+    }
+
+
     useEffect(() => {
         fetchData()
     }, [])
@@ -77,7 +91,11 @@ export function DashboardHeader() {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
                                     <Bell className="h-5 w-5" />
-                                    <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-primary" />
+
+                                    {notifications.length > 0 && (
+                                        <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-primary" />
+                                    )}
+
                                     <span className="sr-only">Alternar notificações</span>
                                 </Button>
                             </DropdownMenuTrigger>
@@ -86,11 +104,17 @@ export function DashboardHeader() {
                                 <DropdownMenuSeparator />
                                 {notifications.length > 0 ? (
                                     notifications.map((n, index) => (
-                                        <DropdownMenuItem key={index} className="flex flex-col items-start gap-1">
+                                        <DropdownMenuItem key={index} className="flex flex-col items-start gap-1 relative">
                                             <p className="font-semibold">{n.title}</p>
                                             <p className="text-xs text-muted-foreground">{n.message}</p>
+
+                                            {/* Data no canto inferior direito */}
+                                            <span className="text-[10px] text-muted-foreground absolute bottom-1 right-2">
+                                                {formatDate(n.createdAt)}
+                                            </span>
                                         </DropdownMenuItem>
                                     ))
+
                                 ) : (
                                     <DropdownMenuItem>Nenhuma nova notificação</DropdownMenuItem>
                                 )}

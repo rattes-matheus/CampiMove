@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -23,8 +25,12 @@ public class AdminNotification {
     @NotNull
     private String message;
 
-    public AdminNotification(String title, String message) {
+    @NotNull
+    private LocalDateTime createdAt;
+
+    public AdminNotification(String title, String message, LocalDateTime createdAt) {
         this.title = title;
         this.message = message;
+        this.createdAt = createdAt;
     }
 }

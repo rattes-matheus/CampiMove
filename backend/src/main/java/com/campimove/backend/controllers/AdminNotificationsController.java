@@ -21,7 +21,7 @@ public class AdminNotificationsController {
     private AdminNotificationService service;
 
     @PostMapping
-    public ResponseEntity<String> sendNotification(@Valid @RequestBody AdminNotificationsDTO formData) {
+    public ResponseEntity<String> sendNotification(@RequestBody AdminNotificationsDTO formData) {
         service.sendNotification(formData.title(), formData.message());
         return ResponseEntity.status(201).body("Notification send successfuly!");
     }
