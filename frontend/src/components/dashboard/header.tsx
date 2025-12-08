@@ -28,6 +28,13 @@ export function DashboardHeader() {
     const [username, setUsername] = useState("")
     const [email, setEmail] = useState("");
     const [profilePictureURL, setProfilePictureURL] = useState("");
+    const [nextIntercampi, setNextIntercampi] = useState<{
+        route: string;
+        schedule: string;
+        minutesLeft: number;
+        formattedTime: string;
+    } | null>(null);
+
 
     const handleLogout = () => {
         localStorage.removeItem("jwt_token")
@@ -48,6 +55,13 @@ export function DashboardHeader() {
             setProfilePictureURL("http://localhost:8080" + response.data.profilePictureURL);
 
             const notificationsRes = await axios.get("http://localhost:8080/api/notifications");
+
+            const notificationNextIntercampi = await axios.get(
+                "http://localhost:8080/api/routes/notification"
+            );
+
+            setNextIntercampi(notificationNextIntercampi.data);
+
 
             setNotification(notificationsRes.data);
 
@@ -91,36 +105,52 @@ export function DashboardHeader() {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
                                     <Bell className="h-5 w-5" />
-
-                                    {notifications.length > 0 && (
-                                        <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-primary" />
-                                    )}
-
                                     <span className="sr-only">Alternar notificações</span>
                                 </Button>
                             </DropdownMenuTrigger>
+
                             <DropdownMenuContent className="w-80" align="end">
                                 <DropdownMenuLabel>Notificações</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
+
+                                {nextIntercampi && (
+                                    <>
+                                        <DropdownMenuItem
+                                            key="intercampi-alert"
+                                            className="flex flex-col items-start gap-1 relative bg-amber-50 border border-amber-200 rounded-md p-3 cursor-default"
+                                        >
+                                            <p className="font-semibold">Próximo Intercampi</p>
+
+                                            <p className="text-xs text-muted-foreground">
+                                                Rota {nextIntercampi.route} • {nextIntercampi.schedule}
+                                            </p>
+
+                                            <p className="text-xs text-muted-foreground">
+                                                Chega em {nextIntercampi.formattedTime}
+                                            </p>
+                                        </DropdownMenuItem>
+
+                                        <DropdownMenuSeparator />
+                                    </>
+                                )}
+
                                 {notifications.length > 0 ? (
                                     notifications.map((n, index) => (
                                         <DropdownMenuItem key={index} className="flex flex-col items-start gap-1 relative">
                                             <p className="font-semibold">{n.title}</p>
                                             <p className="text-xs text-muted-foreground">{n.message}</p>
 
-                                            {/* Data no canto inferior direito */}
                                             <span className="text-[10px] text-muted-foreground absolute bottom-1 right-2">
                                                 {formatDate(n.createdAt)}
                                             </span>
                                         </DropdownMenuItem>
                                     ))
-
                                 ) : (
                                     <DropdownMenuItem>Nenhuma nova notificação</DropdownMenuItem>
                                 )}
-
                             </DropdownMenuContent>
                         </DropdownMenu>
+
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
