@@ -50,6 +50,8 @@ export default function AdminDashboardPage() {
   const [newRoute, setNewRoute] = useState('');
   const [newTime, setNewTime] = useState('');
   const [modified, setModified] = useState(0);
+  const [timeValue, setTimeValue] = useState<number>(1)
+  const [timeUnit, setTimeUnit] = useState<"minutes" | "hours" | "days">("minutes");
   const router = useRouter();
 
   useEffect(() => {
@@ -129,27 +131,35 @@ export default function AdminDashboardPage() {
       });
   };
 
-  const handleSendNotification = (title: string, message: string) => {
+  const handleSendNotification = () => {
     const token = localStorage.getItem('jwt_token');
     if (!token) return router.push("/login");
 
-    if (!notificationTitle.trim() || !notification.trim()) {
+    if (!notificationTitle.trim() || !notification.trim() || !timeValue) {
       return toast({
         title: "Erro",
-        description: "Preencha título e mensagem.",
+        description: "Preencha título, mensagem e tempo.",
         variant: "destructive"
       });
     }
 
-    axios.post("http://localhost:8080/api/notifications", { title: notificationTitle, message: notification })
+    let programmedTime = Number(timeValue);
+
+    if (timeUnit === "hours") programmedTime *= 60;
+    if (timeUnit === "days") programmedTime *= 60 * 24;
+
+    axios.post("http://localhost:8080/api/notifications", {
+      title: notificationTitle,
+      message: notification,
+      programmedTime
+    })
       .then(() => {
-        toast({
-          title: "Sucesso",
-          description: "Notificação enviada."
-        });
+        toast({ title: "Sucesso", description: "Notificação enviada." });
 
         setNotification("");
         setNotificationTitle("");
+        setTimeValue(1);
+        setTimeUnit("minutes");
         setModified(prev => prev + 1);
       })
       .catch(() => {
@@ -160,6 +170,7 @@ export default function AdminDashboardPage() {
         });
       });
   };
+
 
   const handleBanUserFromReport = (reportId: number, userId: number) => {
     axios.post(`http://localhost:8080/api/admin/reports/actions/${userId}/${reportId}/disable-from-report`)
@@ -270,7 +281,7 @@ export default function AdminDashboardPage() {
               <CardDescription>Mensagem global para todos os usuários.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-4">
+              <CardContent className="space-y-4">
                 <Input
                   placeholder="Título da notificação"
                   value={notificationTitle}
@@ -284,10 +295,75 @@ export default function AdminDashboardPage() {
                   rows={5}
                 />
 
-                <Button className="w-full" onClick={() => handleSendNotification(notificationTitle, notification)}>
+                <div className="flex items-center gap-2">
+
+
+
+                  {/* GRUPO DE BOTÕES */}
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Programar para:</Label>
+
+                    <div className="flex items-center gap-3">
+
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          min={1}
+                          value={timeValue}
+                          onChange={(e) => setTimeValue(Number(e.target.value))}
+                          className="w-24 text-center rounded-lg"
+                        />
+                      </div>
+
+                      {/* GRUPO DE BOTÕES */}
+                      <div className="flex overflow-hidden rounded-md border border-gray-300">
+
+                        <button
+                          className={`px-3 py-2 text-sm transition ${timeUnit === "minutes"
+                              ? "bg-orange-500 text-white"
+                              : "bg-gray-100 hover:bg-gray-200"
+                            }`}
+                          onClick={() => setTimeUnit("minutes")}
+                          type="button"
+                        >
+                          Min
+                        </button>
+
+                        <button
+                          className={`px-3 py-2 text-sm transition border-l border-gray-300 ${timeUnit === "hours"
+                              ? "bg-orange-500 text-white"
+                              : "bg-gray-100 hover:bg-gray-200"
+                            }`}
+                          onClick={() => setTimeUnit("hours")}
+                          type="button"
+                        >
+                          Hor
+                        </button>
+
+                        <button
+                          className={`px-3 py-2 text-sm transition border-l border-gray-300 ${timeUnit === "days"
+                              ? "bg-orange-500 text-white"
+                              : "bg-gray-100 hover:bg-gray-200"
+                            }`}
+                          onClick={() => setTimeUnit("days")}
+                          type="button"
+                        >
+                          Dias
+                        </button>
+
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+
+
+                <Button className="w-full" onClick={handleSendNotification}>
                   Enviar
                 </Button>
-              </div>
+              </CardContent>
+
             </CardContent>
           </Card>
 

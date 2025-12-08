@@ -22,7 +22,7 @@ public class AdminNotificationsController {
 
     @PostMapping
     public ResponseEntity<String> sendNotification(@RequestBody AdminNotificationsDTO formData) {
-        service.sendNotification(formData.title(), formData.message());
+        service.sendNotification(formData.title(), formData.message(), formData.programmedTime(), formData.timeUnit());
         return ResponseEntity.status(201).body("Notification send successfuly!");
     }
 

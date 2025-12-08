@@ -28,9 +28,17 @@ public class AdminNotification {
     @NotNull
     private LocalDateTime createdAt;
 
-    public AdminNotification(String title, String message, LocalDateTime createdAt) {
+    @NotNull
+    private Integer programmedTime;
+
+    @NotNull
+    private LocalDateTime definedTime;
+
+    public AdminNotification(String title, String message, Integer programmedTime) {
         this.title = title;
         this.message = message;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
+        this.programmedTime = programmedTime;
+        this.definedTime = this.createdAt.plusMinutes(programmedTime);
     }
 }

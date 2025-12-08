@@ -13,11 +13,29 @@ public class AdminNotificationService {
     @Autowired
     private AdminNotificationsRepository repository;
 
-    public void sendNotification(String title, String message) {
-        repository.save(new AdminNotification(title, message, LocalDateTime.now()));
+    public void sendNotification(String title, String message, Integer programmedTime, String timeUnit) {
+        if (programmedTime == null || programmedTime <= 0)
+            programmedTime = 1;
+
+        if (timeUnit == null)
+            timeUnit = "MINUTES";
+
+        int minutes;
+
+        switch (timeUnit.toUpperCase()){
+            case "HOURS" -> minutes =programmedTime * 60;
+            case "DAYS" -> minutes = programmedTime * 60 * 24;
+            default -> minutes = programmedTime;
+        }
+
+        repository.save(new AdminNotification(title, message, minutes));
     }
 
     public List<AdminNotification> getNotifications() {
-        return repository.findAll();
+        LocalDateTime now = LocalDateTime.now();
+        return repository.findAll()
+                .stream()
+                .filter(n -> n.getDefinedTime().isAfter(now))
+                .toList();
     }
 }
