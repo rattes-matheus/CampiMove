@@ -20,6 +20,14 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, UserX, PlusCircle, ShieldX, CheckCircle } from 'lucide-react';
@@ -53,6 +61,9 @@ export default function AdminDashboardPage() {
   const [timeValue, setTimeValue] = useState<number>(1)
   const [timeUnit, setTimeUnit] = useState<"minutes" | "hours" | "days">("minutes");
   const router = useRouter();
+  const [notificationTarget, setNotificationTarget] =
+    useState<"ALL" | "STUDENTS" | "PROFESSORS">("ALL");
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -143,15 +154,13 @@ export default function AdminDashboardPage() {
       });
     }
 
-    let programmedTime = Number(timeValue);
-
-    if (timeUnit === "hours") programmedTime *= 60;
-    if (timeUnit === "days") programmedTime *= 60 * 24;
 
     axios.post("http://localhost:8080/api/notifications", {
       title: notificationTitle,
       message: notification,
-      programmedTime
+      programmedTime: timeValue,
+      timeUnit: timeUnit.toUpperCase(),
+      target: notificationTarget
     })
       .then(() => {
         toast({ title: "Sucesso", description: "Notificação enviada." });
@@ -278,7 +287,7 @@ export default function AdminDashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Enviar Notificação</CardTitle>
-              <CardDescription>Mensagem global para todos os usuários.</CardDescription>
+              <CardDescription>Envie notificações para todos ou para grupos específicos.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <CardContent className="space-y-4">
@@ -320,8 +329,8 @@ export default function AdminDashboardPage() {
 
                         <button
                           className={`px-3 py-2 text-sm transition ${timeUnit === "minutes"
-                              ? "bg-orange-500 text-white"
-                              : "bg-gray-100 hover:bg-gray-200"
+                            ? "bg-orange-500 text-white"
+                            : "bg-gray-100 hover:bg-gray-200"
                             }`}
                           onClick={() => setTimeUnit("minutes")}
                           type="button"
@@ -331,8 +340,8 @@ export default function AdminDashboardPage() {
 
                         <button
                           className={`px-3 py-2 text-sm transition border-l border-gray-300 ${timeUnit === "hours"
-                              ? "bg-orange-500 text-white"
-                              : "bg-gray-100 hover:bg-gray-200"
+                            ? "bg-orange-500 text-white"
+                            : "bg-gray-100 hover:bg-gray-200"
                             }`}
                           onClick={() => setTimeUnit("hours")}
                           type="button"
@@ -342,8 +351,8 @@ export default function AdminDashboardPage() {
 
                         <button
                           className={`px-3 py-2 text-sm transition border-l border-gray-300 ${timeUnit === "days"
-                              ? "bg-orange-500 text-white"
-                              : "bg-gray-100 hover:bg-gray-200"
+                            ? "bg-orange-500 text-white"
+                            : "bg-gray-100 hover:bg-gray-200"
                             }`}
                           onClick={() => setTimeUnit("days")}
                           type="button"
@@ -354,6 +363,28 @@ export default function AdminDashboardPage() {
                       </div>
 
                     </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">
+                      Enviar para:
+                    </Label>
+
+                    <Select
+                      value={notificationTarget}
+                      onValueChange={(value) =>
+                        setNotificationTarget(value as "ALL" | "STUDENTS" | "PROFESSORS")
+                      }
+                    >
+                      <SelectTrigger className="w-full focus:ring-orange-500">
+                        <SelectValue placeholder="Enviar para" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="ALL">Todos os usuários</SelectItem>
+                        <SelectItem value="STUDENTS">Apenas alunos</SelectItem>
+                        <SelectItem value="PROFESSORS">Apenas professores</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                 </div>

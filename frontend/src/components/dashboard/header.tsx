@@ -44,17 +44,33 @@ export function DashboardHeader() {
 
     async function fetchData() {
         try {
-            const response = await axios.get<{ email: string, name: string }>(`http://localhost:8080/auth/me`, {
+            const response = await axios.get<{
+                email: string;
+                name: string;
+                role: "STUDENT" | "TEACHER" | "DRIVER" | "ADMIN";
+                profilePictureURL: string;
+            }>("http://localhost:8080/auth/me", {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
 
+            const userRole = response.data.role;
+
+
             setUsername(response.data.name);
             setEmail(response.data.email);
             setProfilePictureURL("http://localhost:8080" + response.data.profilePictureURL);
 
-            const notificationsRes = await axios.get("http://localhost:8080/api/notifications");
+            const notificationsRes = await axios.get(
+                "http://localhost:8080/api/notifications",
+                {
+                    params: { role: userRole },
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
 
             const notificationNextIntercampi = await axios.get(
                 "http://localhost:8080/api/routes/notification"

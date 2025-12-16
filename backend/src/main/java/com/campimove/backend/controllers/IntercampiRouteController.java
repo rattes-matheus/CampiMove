@@ -40,6 +40,6 @@ public class IntercampiRouteController {
     @GetMapping("/notification")
     public ResponseEntity<IntercampiTimeNotificationDTO> getNextRoute(){
         IntercampiTimeNotificationDTO next = service.getNextIntercampi();
-        return ResponseEntity.status(201).body(next);
+        return ResponseEntity.status(200).body(next);
     }
 }

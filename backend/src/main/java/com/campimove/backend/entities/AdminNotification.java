@@ -1,5 +1,6 @@
 package com.campimove.backend.entities;
 
+import com.campimove.backend.enums.NotificationTarget;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,7 +23,7 @@ public class AdminNotification {
     @NotBlank
     private String title;
 
-    @NotNull
+    @NotBlank
     private String message;
 
     @NotNull
@@ -34,11 +35,17 @@ public class AdminNotification {
     @NotNull
     private LocalDateTime definedTime;
 
-    public AdminNotification(String title, String message, Integer programmedTime) {
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    private NotificationTarget target;
+
+
+    public AdminNotification(String title, String message, Integer programmedTime, NotificationTarget target) {
         this.title = title;
         this.message = message;
         this.createdAt = LocalDateTime.now();
         this.programmedTime = programmedTime;
         this.definedTime = this.createdAt.plusMinutes(programmedTime);
+        this.target = target;
     }
 }

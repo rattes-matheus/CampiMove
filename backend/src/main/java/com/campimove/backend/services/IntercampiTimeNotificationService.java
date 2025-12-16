@@ -30,7 +30,6 @@ public class IntercampiTimeNotificationService {
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
 
-        // 1. Tenta achar horário de hoje que ainda não passou
         for (IntercampiRoute route : routes) {
             LocalDateTime scheduleToday = LocalDateTime.of(today, route.getSchedule());
 
@@ -45,7 +44,6 @@ public class IntercampiTimeNotificationService {
             }
         }
 
-        // 2. Se passou de todos, pega o primeiro de amanhã
         IntercampiRoute first = routes.get(0);
         LocalDateTime scheduleTomorrow = LocalDateTime.of(today.plusDays(1), first.getSchedule());
 
