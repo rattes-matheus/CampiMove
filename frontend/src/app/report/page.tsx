@@ -10,12 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { Footer } from '@/components/landing/footer'
-import { 
-  AlertCircle, 
-  Bus, 
-  Clock, 
-  MapPin, 
-  AlertTriangle, 
+import {
+  AlertCircle,
+  Bus,
+  Clock,
+  MapPin,
+  AlertTriangle,
   FileText,
   Send,
   Loader2,
@@ -59,8 +59,8 @@ export default function ReportPage() {
 
   const handleNextStep = () => {
     if (formStep === 1 && (!problemType || !route || !scheduledTime)) {
-      toast({ 
-        title: 'Informações básicas', 
+      toast({
+        title: 'Informações básicas',
         description: 'Preencha tipo, rota e horário para continuar.',
         variant: 'destructive'
       })
@@ -75,8 +75,8 @@ export default function ReportPage() {
 
   const submit = async () => {
     if (!location || !severity || !description) {
-      toast({ 
-        title: 'Detalhes obrigatórios', 
+      toast({
+        title: 'Detalhes obrigatórios',
         description: 'Preencha localização, gravidade e descrição.',
         variant: 'destructive'
       })
@@ -84,12 +84,12 @@ export default function ReportPage() {
     }
 
     setIsSubmitting(true)
-    
+
     try {
       const token = localStorage.getItem('jwt_token')
       if (!token) {
-        toast({ 
-          title: 'Não autenticado', 
+        toast({
+          title: 'Não autenticado',
           description: 'Faça login para reportar um problema.',
           variant: 'destructive'
         })
@@ -97,37 +97,39 @@ export default function ReportPage() {
       }
 
       const reportData = {
-        problemType,
-        route,
-        scheduledTime,
-        location,
-        severity,
-        description,
+        title: `${problemType.toUpperCase()} - ${route.toUpperCase()}`,
+        fullDescription: `
+Horário programado: ${scheduledTime}
+Local: ${location}
+Gravidade: ${severity}
+
+Descrição:
+${description}
+      `,
+        category: problemType.toUpperCase(), // ENUM
+        status: "OPEN"
       }
 
       console.log('Enviando report:', reportData)
 
-      const response = await axios.post(
-        'http://localhost:8080/report',
+      await axios.post(
+        'http://localhost:8080/api/reports',
         reportData,
-        { 
-          headers: { 
+        {
+          headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
-          } 
+          }
         }
       )
 
-      console.log('Resposta do backend:', response.data)
-
       setShowSuccess(true)
-      
-      toast({ 
+
+      toast({
         title: '✅ Reporte enviado com sucesso!',
-        description: 'Obrigado por contribuir para a melhoria do intercampi.',
+        description: 'Obrigado por contribuir.',
       })
 
-      
       setTimeout(() => {
         setProblemType('')
         setRoute('')
@@ -139,11 +141,11 @@ export default function ReportPage() {
         setShowSuccess(false)
       }, 3000)
 
-    } catch (error) {
-      console.error('Erro ao enviar report:', error)
-      toast({ 
-        title: '❌ Erro ao enviar reporte',
-        description: error.response?.data?.message || 'Tente novamente mais tarde.',
+    } catch (error: any) {
+      console.error(error)
+      toast({
+        title: '❌ Erro ao enviar',
+        description: 'Tente novamente.',
         variant: 'destructive'
       })
     } finally {
@@ -151,7 +153,10 @@ export default function ReportPage() {
     }
   }
 
-  
+
+
+
+
   if (showSuccess) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
@@ -175,8 +180,8 @@ export default function ReportPage() {
                     <span>Redirecionando em 3 segundos...</span>
                   </div>
                 </div>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setShowSuccess(false)
                     setFormStep(1)
@@ -196,10 +201,10 @@ export default function ReportPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-muted/20">
       <DashboardHeader />
-      
+
       <main className="flex-grow container mx-auto px-4 md:px-6 py-8">
         <div className="max-w-3xl mx-auto">
-          
+
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -215,7 +220,7 @@ export default function ReportPage() {
                 Passo {formStep}/2
               </Badge>
             </div>
-            
+
             <Progress value={formStep === 1 ? 50 : 100} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
               <span>Informações básicas</span>
@@ -239,14 +244,14 @@ export default function ReportPage() {
                 )}
               </CardTitle>
               <CardDescription>
-                {formStep === 1 
-                  ? 'Informe sobre qual ônibus e horário do problema' 
+                {formStep === 1
+                  ? 'Informe sobre qual ônibus e horário do problema'
                   : 'Descreva detalhadamente o que aconteceu'}
               </CardDescription>
             </CardHeader>
-            
+
             <CardContent>
-              
+
               {formStep === 1 ? (
                 <div className="space-y-6">
                   <div>
@@ -264,8 +269,8 @@ export default function ReportPage() {
                             <button
                               key={problem.type}
                               onClick={() => setProblemType(problem.type)}
-                              className={`p-4 rounded-lg border-2 text-left transition-all ${problemType === problem.type 
-                                ? 'border-primary bg-primary/5' 
+                              className={`p-4 rounded-lg border-2 text-left transition-all ${problemType === problem.type
+                                ? 'border-primary bg-primary/5'
                                 : 'border-border hover:border-primary/50 hover:bg-muted/50'}`}
                             >
                               <div className="font-medium">{problem.label}</div>
@@ -344,7 +349,7 @@ export default function ReportPage() {
                   </div>
                 </div>
               ) : (
-                
+
                 <div className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-3">
@@ -435,7 +440,7 @@ export default function ReportPage() {
                     </div>
                   </div>
 
-                  
+
                   <Card className="bg-muted/30 border">
                     <CardContent className="pt-4">
                       <h4 className="font-semibold mb-3">Resumo do seu reporte:</h4>
@@ -486,7 +491,7 @@ export default function ReportPage() {
                     <Users className="h-4 w-4 inline mr-1" />
                     Sua contribuição ajuda todos os alunos
                   </div>
-                  <Button 
+                  <Button
                     onClick={handleNextStep}
                     disabled={!problemType || !route || !scheduledTime}
                     className="gap-2"
@@ -497,14 +502,14 @@ export default function ReportPage() {
                 </>
               ) : (
                 <>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={handlePrevStep}
                     disabled={isSubmitting}
                   >
                     Voltar
                   </Button>
-                  <Button 
+                  <Button
                     onClick={submit}
                     disabled={isSubmitting || !location || !severity || !description}
                     className="gap-2"
@@ -526,7 +531,7 @@ export default function ReportPage() {
             </CardFooter>
           </Card>
 
-          
+
           <div className="mt-8 grid md:grid-cols-3 gap-4">
             <Card className="border-border">
               <CardContent className="pt-4">
@@ -541,7 +546,7 @@ export default function ReportPage() {
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card className="border-border">
               <CardContent className="pt-4">
                 <div className="flex items-center gap-3 mb-2">
@@ -555,7 +560,7 @@ export default function ReportPage() {
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card className="border-border">
               <CardContent className="pt-4">
                 <div className="flex items-center gap-3 mb-2">
@@ -572,7 +577,7 @@ export default function ReportPage() {
           </div>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   )
