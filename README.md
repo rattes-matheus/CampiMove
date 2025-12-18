@@ -96,6 +96,8 @@ O **CampiMove** tem como objetivo melhorar a mobilidade para os campi do CEFET, 
 | CSU18 | Logout                                         |
 | CSU19 | Listar usuários cadastrados                    |
 | CSU20 | Gerenciar relatórios de problemas              |
+| CSU21 | Gerenciar Avisos no Sistema                    |
+
 
 ---
 
@@ -108,6 +110,7 @@ O **CampiMove** tem como objetivo melhorar a mobilidade para os campi do CEFET, 
 | 2      | CSU20       | Gabriela Pacheco  |
 | 1      | CSU03       | Matheus Rattes    |
 | 3      | CSU04       | Gabriela Pacheco  |
+| 3      | CSU21       | Gabriela Pacheco  |
 | 1      | CSU05       | Bruno Frade       |
 | 2      | CSU06       | Matheus Rattes    |
 | 2      | CSU07       | Francisco Eduardo |
