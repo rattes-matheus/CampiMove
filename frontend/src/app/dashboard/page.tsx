@@ -5,7 +5,8 @@ import { DashboardHeader } from '@/components/dashboard/header';
 import { Footer } from '@/components/landing/footer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bus, CalendarPlus, Clock, Star, Route, Megaphone } from 'lucide-react'; // <-- Importado Megaphone
+import { Bus, CalendarPlus, Clock, Star, Route, Megaphone } from 'lucide-react';
+
 import Link from 'next/link';
 import {
     Dialog,
@@ -21,7 +22,16 @@ import { useToast } from '@/hooks/use-toast';
 import BusSchedule from '@/lib/interfaces/BusSchedule';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { AlertTriangle, Calendar } from 'lucide-react';
 
+type Notice = {
+    id: number;
+    title: string;
+    message: string;
+    priority: 'HIGH' | 'MEDIUM' | 'LOW';
+    active: boolean;
+    date: string;
+};
 
 const initialRecentTravels = [
     {
@@ -48,16 +58,6 @@ const initialRecentTravels = [
     },
 ];
 
-type Notice = {
-    id: number
-    title: string
-    message: string
-    priority: 'LOW' | 'MEDIUM' | 'HIGH'
-    active: boolean
-    date: string // ISO (ex: 2025-01-10T14:30:00)
-}
-
-
 type NextTravel = {
     motoristName: string;
     origin: string;
@@ -79,7 +79,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const [nextTravels, setNextTravels] = useState<NextTravel[]>([]);
     const [notices, setNotices] = useState<Notice[]>([]);
-    // NÃO É NECESSÁRIO isAdmin AQUI, REMOVIDO.
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -95,13 +95,6 @@ export default function DashboardPage() {
 
             if (userRole === "DRIVER") return router.push("/dashboard/motorist");
 
-            // Adicionei esta lógica para que, se for Admin, ele seja redirecionado para a área Admin
-            if (userRole === "ADMIN") {
-                // Se for um Admin logando no dashboard de usuário, o correto é ter uma área própria,
-                // mas para manter o fluxo atual, vamos apenas garantir que o card de reports de admin 
-                // não apareça (ele nem está aqui agora) e que ele continue vendo o dashboard do usuário.
-            }
-
             console.log(userId);
 
             const travelsRes = await axios.get<NextTravel[]>("http://localhost:8080/travels/my-upcoming", {
@@ -112,6 +105,14 @@ export default function DashboardPage() {
             });
 
             setNextTravels(travelsRes.data);
+
+            const noticesRes = await axios.get<Notice[]>(
+                "http://localhost:8080/api/notices/get",
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setNotices(noticesRes.data);
+
         }
         fetchData();
     }, [router]);
@@ -127,15 +128,6 @@ export default function DashboardPage() {
             setSchedules(res.data)
         }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
         setCurrentMinutes(now.getHours() * 60 + now.getMinutes());
-
-        const noticesRes = async function carregarNotices(token: string) {
-            const res = await axios.get<Notice[]>(
-                'http://localhost:8080/api/notices/get',
-                { headers: { Authorization: `Bearer ${token}` } }
-            )
-
-            return res.data
-        }
     }, [router]);
 
     const handleRatingSubmit = () => {
@@ -161,12 +153,10 @@ export default function DashboardPage() {
         }
     };
 
-
-
-
     const highNotices = notices.filter(n => n.priority === 'HIGH');
     const mediumNotices = notices.filter(n => n.priority === 'MEDIUM');
     const lowNotices = notices.filter(n => n.priority === 'LOW');
+
 
 
     return (
@@ -255,23 +245,6 @@ export default function DashboardPage() {
                     </Card>
                     {/* FIM NOVO CARD */}
 
-                    <Card
-                        className="hover:shadow-lg cursor-pointer "
-                        onClick={() => window.location.href = '/bus-schedule'}
-                    >
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-lg font-medium">Horários de Ônibus</CardTitle>
-                            <Route className="h-6 w-6 text-orange-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-4xl font-bold text-green-600">07:30</div>
-                            <p className="text-xs text-muted-foreground">Próximo ônibus Campus I → II</p>
-                            <Button className="w-full mt-3 bg-orange-500 hover:bg-orange-600 text-white">
-                                Ver Horários Completos
-                            </Button>
-                        </CardContent>
-                    </Card>
-
                     <Dialog open={isRatingDialogOpen} onOpenChange={setIsRatingDialogOpen}>
                         <Card className="hover:shadow-lg transition-shadow md:col-span-2 lg:col-span-1 lg:row-start-2">
                             <CardHeader>
@@ -343,7 +316,7 @@ export default function DashboardPage() {
                             </CardDescription>
                         </CardHeader>
 
-                        <CardContent className="space-y-3 max-h-[180px] overflow-y-auto pr-2">
+                        <CardContent className="space-y-3 max-h-[200px] overflow-y-auto pr-2">
                             {/* HIGH */}
                             {highNotices.length > 0 && highNotices.map(notice => (
                                 <div
@@ -392,7 +365,7 @@ export default function DashboardPage() {
                             </CardDescription>
                         </CardHeader>
 
-                        <CardContent className="space-y-2 max-h-[160px] overflow-y-auto pr-2">
+                        <CardContent className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
                             {lowNotices.length > 0 ? lowNotices.map(notice => (
                                 <div
                                     key={notice.id}

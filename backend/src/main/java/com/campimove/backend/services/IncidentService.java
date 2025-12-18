@@ -26,11 +26,6 @@ public class IncidentService {
         this.incidentRepository = incidentRepository;
         this.incidentMapper = incidentMapper;
     }
-    /*
-    public IncidentMapper getIncidentMapper() {
-        return incidentMapper;
-    }
-    */
 
     public Page<Incident> findReports(String searchTerm, String status, String category, Pageable pageable) {
         return incidentRepository.findAll(
