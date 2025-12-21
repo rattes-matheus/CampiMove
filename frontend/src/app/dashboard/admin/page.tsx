@@ -399,28 +399,29 @@ export default function AdminDashboardPage() {
 
                         </CardContent>
                     </Card>
-                    {/* 2. NOVO CARD: Gerenciar REPORTS (Qualquer Motivo) */}
-                    <Card className="hover:shadow-lg transition-shadow">
-                        <CardHeader>
-                            <CardTitle className="flex items-center">
-                                <FileText className="mr-3 h-6 w-6 text-primary" />
-                                Gerenciar Reports
-                            </CardTitle>
-                            <CardDescription>
-                                Central de Reports de usuários (atrasos, problemas gerais, etc.).
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm text-muted-foreground">
-                                    Acesse o workflow completo.
-                                </p>
-                                <Button onClick={() => router.push('/dashboard/admin/reports')}>
-                                    Ver Reports <ArrowRight className="ml-2 h-4 w-4" />
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    {/* INCIDENTES */}
+        <Card>
+            <CardHeader>
+              <CardTitle>Incidentes Ocorridos</CardTitle>
+              <CardDescription>
+                Visualize e acompanhe registros de incidentes reportados.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">
+                Aqui você pode consultar todos os incidentes relatados no sistema.
+              </div>
+
+              <Button
+                onClick={() => router.push("/dashboard/admin/report")}
+                className="flex items-center gap-2"
+              >
+                Ver Incidentes
+              </Button>
+                 </CardContent>
+               </Card>
+
 
                     <Card>
                         <CardHeader className="flex flex-row items-center gap-3">

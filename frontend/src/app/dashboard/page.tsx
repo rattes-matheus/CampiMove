@@ -226,8 +226,7 @@ export default function DashboardPage() {
                             </Button>
                         </CardContent>
                     </Card>
-
-                    {/* NOVO CARD: REPORTAR PROBLEMA (PARA O USUÁRIO) */}
+                        {/* NOVO CARD: REPORTAR PROBLEMA (PARA O USUÁRIO) */}
                     <Card className="hover:shadow-lg transition-shadow border-2 border-red-300">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-lg font-medium text-red-600">Reportar Problema</CardTitle>
@@ -236,7 +235,7 @@ export default function DashboardPage() {
                         <CardContent>
                             <p className="text-muted-foreground mb-4">Houve algum problema com o ônibus ou a rota?
                                 Reporte à administração.</p>
-                            <Link href="/report" passHref legacyBehavior>
+                            <Link href="/dashboard/report" passHref legacyBehavior>
                                 <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
                                     Abrir Novo Report
                                 </Button>

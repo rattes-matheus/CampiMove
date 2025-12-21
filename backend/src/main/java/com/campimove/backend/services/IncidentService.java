@@ -1,96 +1,127 @@
-package com.campimove.backend.services; 
+package com.campimove.backend.services;
 
-import com.campimove.backend.repositories.IncidentRepository; 
-import com.campimove.backend.repositories.IncidentSpecification; 
-import com.campimove.backend.mappers.IncidentMapper; 
+import com.campimove.backend.dtos.IncidentRequestDTO;
+import com.campimove.backend.dtos.IncidentResponseDTO;
 import com.campimove.backend.entities.Incident;
-import com.campimove.backend.entities.ResolutionNote; 
-import com.campimove.backend.dtos.IncidentResponse; 
-import com.campimove.backend.dtos.IncidentRequest; 
-import com.campimove.backend.dtos.IncidentNoteRequest; 
-import com.campimove.backend.enums.IncidentStatus; 
-
-import jakarta.transaction.Transactional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.campimove.backend.entities.User;
+import com.campimove.backend.enums.IncidentCategory;
+import com.campimove.backend.repositories.IncidentsRepository;
+import com.campimove.backend.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-@Service 
-public class IncidentService { 
+import java.util.List;
 
+    @Service
+    public class IncidentService {
 
-    private final IncidentRepository incidentRepository; 
-    private final IncidentMapper incidentMapper; 
-    
-    public IncidentService(IncidentRepository incidentRepository, IncidentMapper incidentMapper) {
-        this.incidentRepository = incidentRepository;
-        this.incidentMapper = incidentMapper;
-    }
+        @Autowired
+        private IncidentsRepository incidentsRepository;
 
-    public Page<Incident> findReports(String searchTerm, String status, String category, Pageable pageable) {
-        return incidentRepository.findAll(
-            IncidentSpecification.filterBy(searchTerm, status, category), 
-            pageable
-        );
-    }
+        @Autowired
+        private UserRepository userRepository;
 
-    @Transactional
+        public Incident createIncident(IncidentRequestDTO formData) {
 
-    public IncidentResponse createReport(IncidentRequest request) {
-        Incident newIncident = incidentMapper.toEntity(request); 
-        
-        newIncident.setReportedBy("Admin Campimove"); 
-        newIncident.setReporterId(1L); 
-        
-        Incident savedIncident = incidentRepository.save(newIncident); 
-        return incidentMapper.toResponse(savedIncident);
-    }
+            Incident incident = new Incident(
+                    formData.title(),
+                    formData.full_description(),
+                    formData.category(),
+                    formData.reporter_id()
+            );
 
-    public IncidentResponse getReportDetails(Long id) {
-        Incident incident = incidentRepository.findById(id) 
-            .orElseThrow(() -> new IncidentNotFoundException("Report de Incidente não encontrado com ID: " + id)); 
-        
-        return incidentMapper.toResponse(incident);
-    }
-    
-    @Transactional
-    public IncidentResponse updateReport(Long id, IncidentRequest request) {
-        Incident existingIncident = incidentRepository.findById(id)
-            .orElseThrow(() -> new IncidentNotFoundException("Report de Incidente não encontrado com ID: " + id)); 
-
-        if (request.getStatus() != null) {
-            existingIncident.setStatus(request.getStatus());
+            return incidentsRepository.save(incident);
         }
 
-        Incident updatedIncident = incidentRepository.save(existingIncident); 
-        return incidentMapper.toResponse(updatedIncident);
-    }
+        public IncidentResponseDTO getIncidentDetails(Long id) {
 
-    @Transactional
-    public IncidentResponse addResolutionNote(Long incidentId, IncidentNoteRequest noteRequest, String adminName) {
-        Incident incident = incidentRepository.findById(incidentId) 
-            .orElseThrow(() -> new IncidentNotFoundException("Report de Incidente não encontrado com ID: " + incidentId)); 
-        
-        ResolutionNote note = new ResolutionNote();
-        note.setNote(noteRequest.getNote());
-        note.setAdminName(adminName); 
-        note.setIncident(incident); 
-        
-        incident.getResolutionNotes().add(note);
-        
-        Incident savedIncident = incidentRepository.save(incident); 
-        return incidentMapper.toResponse(savedIncident);
-    }
-    
-    @Transactional
-    public void closeReport(Long id) {
-        Incident incident = incidentRepository.findById(id) 
-            .orElseThrow(() -> new IncidentNotFoundException("Report de Incidente não encontrado com ID: " + id)); 
-        
-        if (incident.getStatus() != IncidentStatus.RESOLVIDO) { 
-            throw new IllegalStateException("Ação Proibida: Apenas Reports RESOLVIDOS podem ser FECHADOS.");
+            Incident incident = incidentsRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Incidente não encontrado"));
+
+            User user = userRepository.findById(incident.getReporter_id())
+                    .orElse(null);
+
+            String reporterName = (user != null)
+                    ? user.getName()
+                    : "Usuário desconhecido";
+
+            return new IncidentResponseDTO(
+                    incident.getId(),
+                    incident.getTitle(),
+                    incident.getFull_description(),
+                    formatSummary(incident),
+                    translateCategory(incident.getCategory()),
+                    incident.getReporter_id(),
+                    reporterName,
+                    incident.getCreated_at()
+            );
         }
-        incident.setStatus(IncidentStatus.FECHADO); 
-        incidentRepository.save(incident);
+
+
+        public List<IncidentResponseDTO> getAllIncidents() {
+            return incidentsRepository.findAll()
+                    .stream()
+                    .map(incident -> {
+
+                        User user = userRepository.findById(incident.getReporter_id())
+                                .orElse(null);
+
+                        String reporterName = (user != null)
+                                ? user.getName()
+                                : "Usuário desconhecido";
+
+                        return new IncidentResponseDTO(
+                                incident.getId(),
+                                incident.getTitle(),
+                                incident.getFull_description(),
+                                formatSummary(incident),
+                                translateCategory(incident.getCategory()),
+                                incident.getReporter_id(),
+                                reporterName,
+                                incident.getCreated_at()
+                        );
+                    })
+                    .toList();
+        }
+
+        private String formatSummary(Incident incident) {
+            String category = translateCategory(incident.getCategory());
+
+            String title = incident.getTitle();
+            String route = "";
+            String time = "";
+
+            if (title != null && title.contains(" - ")) {
+
+                String[] parts = title.split(" - ");
+
+                if (parts.length >= 3) {
+
+                    String routeRaw = parts[1];
+                    time = parts[2];
+
+                    route = routeRaw
+                            .replace("TO", " para ")
+                            .replace("_", " ");
+                }
+            }
+
+            return category + " | " + route + " - " + time;
+        }
+
+
+
+        private String translateCategory(IncidentCategory category) {
+            return switch (category) {
+                case DELAY -> "Atraso";
+                case BUS_MISSING -> "Ônibus não passou";
+                case OVERCROWDED -> "Superlotação";
+                case DRIVER -> "Problema com motorista";
+                case SAFETY -> "Segurança";
+                case ROUTE -> "Rota";
+                case COMFORT -> "Conforto";
+                default -> "Outro";
+            };
+        }
+
     }
-}

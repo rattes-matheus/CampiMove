@@ -1,39 +1,46 @@
 package com.campimove.backend.entities;
 
-import com.campimove.backend.enums.IncidentCategory; 
-import com.campimove.backend.enums.IncidentStatus; 
+import com.campimove.backend.enums.IncidentCategory;
 import jakarta.persistence.*;
-import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "incidents") 
-@Data
-public class Incident { 
+@Getter
+@Setter
+@NoArgsConstructor
+@Table(name = "incidents")
+public class Incident {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     private String title;
 
-    @Lob 
-    private String fullDescription;
+    @NotBlank
+    private String full_description;
 
     @Enumerated(EnumType.STRING)
-    private IncidentCategory category; 
+    private IncidentCategory category;
 
-    @Enumerated(EnumType.STRING)
-    private IncidentStatus status = IncidentStatus.ABERTO; 
+    @NotNull
+    private Long reporter_id;
 
-    private String reportedBy;
+    @NotNull
+    private LocalDateTime created_at;
 
-    private Long reporterId;
-
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @OneToMany(mappedBy = "incident", cascade = CascadeType.ALL, orphanRemoval = true) 
-    private List<ResolutionNote> resolutionNotes = new ArrayList<>();
+    public Incident(String title, String full_description, IncidentCategory category, Long reporter_id) {
+        this.title = title;
+        this.full_description = full_description;
+        this.category = category;
+        this.reporter_id = reporter_id;
+        this.created_at = LocalDateTime.now();
+    }
 }
