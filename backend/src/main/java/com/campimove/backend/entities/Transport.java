@@ -33,8 +33,12 @@ public class Transport {
 
     @NotBlank
     private String contact;
-    
+
     private boolean active;
+
+    private Double averageRating;
+
+    private Integer totalRatings;
 
     public Transport(TransportTypes type, String model, String contact, Long capacity, String motorist) {
         this.type = type;
@@ -43,5 +47,7 @@ public class Transport {
         this.capacity = capacity;
         this.active = false;
         this.motorist = motorist;
+        this.averageRating = 0.0;
+        this.totalRatings = 0;
     }
 }
