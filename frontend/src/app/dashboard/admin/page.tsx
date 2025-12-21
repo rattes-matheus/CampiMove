@@ -20,7 +20,7 @@ import {
     DialogTrigger,
     DialogClose,
 } from "@/components/ui/dialog";
-// ... (initialUsers e initialReports removidos para brevidade, não são relevantes para a mudança)
+
 import { FileText, ArrowRight } from 'lucide-react';
 
 import { CalendarDays } from "lucide-react";

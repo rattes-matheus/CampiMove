@@ -2,6 +2,7 @@ package com.campimove.backend.controllers;
 
 import com.campimove.backend.dtos.IncidentRequestDTO;
 import com.campimove.backend.dtos.IncidentResponseDTO;
+import com.campimove.backend.enums.IncidentStatus;
 import com.campimove.backend.services.IncidentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,4 +39,18 @@ public class IncidentController {
         }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteIncident(@PathVariable Long id) {
+        incidentService.deleteIncident(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Void> updateIncidentStatus(
+            @PathVariable Long id,
+            @RequestParam IncidentStatus status
+    ) {
+        incidentService.updateStatus(id, status);
+        return ResponseEntity.noContent().build();
+    }
 }

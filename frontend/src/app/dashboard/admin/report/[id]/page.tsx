@@ -1,23 +1,21 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter, notFound } from 'next/navigation'
-import axios from 'axios'
-
-import { DashboardHeader } from '@/components/dashboard/header'
-import { Footer } from '@/components/landing/footer'
+import React, { useState, useEffect } from 'react';
+import { useRouter, notFound } from 'next/navigation';
+import axios from 'axios';
+import { DashboardHeader } from '@/components/dashboard/header';
+import { Footer } from '@/components/landing/footer';
 
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription
-} from '@/components/ui/card'
-
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
+  CardDescription,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 
 import {
   FileText,
@@ -26,61 +24,66 @@ import {
   Calendar,
   ClipboardList,
   Clock,
-  Loader2
-} from 'lucide-react'
+  Loader2,
+} from 'lucide-react';
 
 type Incident = {
-  id: number
-  title: string
-  full_description: string
-  formatted_summary: string
-  category: string
-  reporter_id: number
-  reporter_name: string
-  created_at: string
-}
+  id: number;
+  title: string;
+  full_description: string;
+  formatted_summary: string;
+  category: string;
+  reporter_id: number;
+  reporter_name: string;
+  created_at: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+};
 
 export default function IncidentDetailPage({
-  params
+  params,
 }: {
-  params: { id: string }
+  params: { id: string };
 }) {
-  const router = useRouter()
-  const incidentId = Number(params.id)
+  const router = useRouter();
+  const incidentId = Number(params.id);
 
-  const [incident, setIncident] = useState<Incident | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [incident, setIncident] = useState<Incident | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 🔥 FETCH NO BACKEND
+  const statusConfig = {
+    OPEN: { label: 'Em análise' },
+    IN_PROGRESS: { label: 'Em andamento' },
+    RESOLVED: { label: 'Resolvido' },
+  };
+
   const fetchIncident = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await axios.get(
         `http://localhost:8080/incidents/${incidentId}`
-      )
+      );
 
-      setIncident(response.data)
+      setIncident(response.data);
     } catch (err: any) {
-      console.error(err)
+      console.error(err);
 
       if (err.response?.status === 404) {
-        return notFound()
+        return notFound();
       }
 
-      setError('Não foi possível carregar os detalhes do incidente.')
+      setError('Não foi possível carregar os detalhes do incidente.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    if (incidentId) fetchIncident()
-  }, [incidentId])
+    if (incidentId) fetchIncident();
+  }, [incidentId]);
 
-  // ⏳ LOADING
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen bg-background justify-center items-center">
@@ -89,15 +92,13 @@ export default function IncidentDetailPage({
           Carregando incidente #{incidentId}...
         </p>
       </div>
-    )
+    );
   }
 
-  // ❌ ERRO
   if (error) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
         <DashboardHeader />
-
         <main className="flex-grow container mx-auto px-4 md:px-6 py-8">
           <Alert variant="destructive">
             <AlertTitle>Erro</AlertTitle>
@@ -112,15 +113,51 @@ export default function IncidentDetailPage({
             Voltar
           </Button>
         </main>
-
         <Footer />
       </div>
-    )
+    );
   }
 
-  if (!incident) return null
+  if (!incident) return null;
 
-  // ✅ TELA NORMAL
+  const updateStatus = async (newStatus: Incident['status']) => {
+    try {
+      await axios.patch(
+        `http://localhost:8080/incidents/${incidentId}/status`,
+        null,
+        {
+          params: { status: newStatus },
+        }
+      );
+
+      setIncident(prev =>
+        prev ? { ...prev, status: newStatus } : prev
+      );
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao atualizar status do incidente.');
+    }
+  };
+
+  const deleteIncident = async () => {
+    const confirmed = confirm(
+      'Tem certeza que deseja deletar este incidente? Essa ação não pode ser desfeita.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(
+        `http://localhost:8080/incidents/${incidentId}`
+      );
+
+      router.push('/dashboard/admin/report');
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao deletar o incidente.');
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <DashboardHeader />
@@ -142,7 +179,6 @@ export default function IncidentDetailPage({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* COLUNA PRINCIPAL */}
           <div className="lg:col-span-2 space-y-8">
             <Card>
               <CardHeader>
@@ -179,7 +215,6 @@ export default function IncidentDetailPage({
             </Card>
           </div>
 
-          {/* LATERAL */}
           <div className="lg:col-span-1 space-y-8">
             <Card>
               <CardHeader>
@@ -202,7 +237,6 @@ export default function IncidentDetailPage({
                     <Calendar className="mr-2 h-4 w-4" />
                     Criado em:
                   </span>
-
                   <span>
                     {new Date(
                       incident.created_at
@@ -215,10 +249,59 @@ export default function IncidentDetailPage({
                     <User className="mr-2 h-4 w-4" />
                     ID do Reportador:
                   </span>
-
                   <span>
                     #{incident.reporter_id ?? '—'}
                   </span>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">
+                    Status do Incidente
+                  </p>
+
+                  <Badge className="mb-2">
+                    {statusConfig[incident.status].label}
+                  </Badge>
+
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={incident.status === 'OPEN'}
+                      onClick={() => updateStatus('OPEN')}
+                    >
+                      Marcar como Em análise
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={incident.status === 'IN_PROGRESS'}
+                      onClick={() => updateStatus('IN_PROGRESS')}
+                    >
+                      Marcar como Em andamento
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={incident.status === 'RESOLVED'}
+                      onClick={() => updateStatus('RESOLVED')}
+                    >
+                      Marcar como Resolvido
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    onClick={deleteIncident}
+                  >
+                    Deletar Incidente
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -228,5 +311,5 @@ export default function IncidentDetailPage({
 
       <Footer />
     </div>
-  )
+  );
 }

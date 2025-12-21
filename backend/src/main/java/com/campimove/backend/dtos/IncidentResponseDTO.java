@@ -10,5 +10,6 @@ public record IncidentResponseDTO(
         String category,
         Long reporter_id,
         String reporter_name,
-        LocalDateTime created_at
+        LocalDateTime created_at,
+        String status
 ) {}

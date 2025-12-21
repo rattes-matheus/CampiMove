@@ -1,6 +1,7 @@
 package com.campimove.backend.entities;
 
 import com.campimove.backend.enums.IncidentCategory;
+import com.campimove.backend.enums.IncidentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -36,11 +37,16 @@ public class Incident {
     @NotNull
     private LocalDateTime created_at;
 
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    private IncidentStatus status;
+
     public Incident(String title, String full_description, IncidentCategory category, Long reporter_id) {
         this.title = title;
         this.full_description = full_description;
         this.category = category;
         this.reporter_id = reporter_id;
         this.created_at = LocalDateTime.now();
+        this.status = IncidentStatus.OPEN;
     }
 }

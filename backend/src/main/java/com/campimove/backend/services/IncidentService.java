@@ -5,6 +5,7 @@ import com.campimove.backend.dtos.IncidentResponseDTO;
 import com.campimove.backend.entities.Incident;
 import com.campimove.backend.entities.User;
 import com.campimove.backend.enums.IncidentCategory;
+import com.campimove.backend.enums.IncidentStatus;
 import com.campimove.backend.repositories.IncidentsRepository;
 import com.campimove.backend.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,8 @@ import java.util.List;
                     translateCategory(incident.getCategory()),
                     incident.getReporter_id(),
                     reporterName,
-                    incident.getCreated_at()
+                    incident.getCreated_at(),
+                    incident.getStatus().name()
             );
         }
 
@@ -78,7 +80,8 @@ import java.util.List;
                                 translateCategory(incident.getCategory()),
                                 incident.getReporter_id(),
                                 reporterName,
-                                incident.getCreated_at()
+                                incident.getCreated_at(),
+                                incident.getStatus().name()
                         );
                     })
                     .toList();
@@ -109,7 +112,12 @@ import java.util.List;
             return category + " | " + route + " - " + time;
         }
 
-
+        public void deleteIncident(Long id) {
+            if (!incidentsRepository.existsById(id)) {
+                throw new RuntimeException("Incidente não encontrado");
+            }
+            incidentsRepository.deleteById(id);
+        }
 
         private String translateCategory(IncidentCategory category) {
             return switch (category) {
@@ -122,6 +130,15 @@ import java.util.List;
                 case COMFORT -> "Conforto";
                 default -> "Outro";
             };
+        }
+
+        public void updateStatus(Long id, IncidentStatus status) {
+
+            Incident incident = incidentsRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Incidente não encontrado"));
+
+            incident.setStatus(status);
+            incidentsRepository.save(incident);
         }
 
     }
