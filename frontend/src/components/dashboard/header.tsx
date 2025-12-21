@@ -63,21 +63,28 @@ export function DashboardHeader() {
             setProfilePictureURL("http://localhost:8080" + response.data.profilePictureURL);
 
             const notificationsRes = await axios.get(
-                "http://localhost:8080/api/notifications",
+                "http://localhost:8080/api/notifications/list",
                 {
                     params: { role: userRole },
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                    headers: { Authorization: `Bearer ${token}` }
                 }
             );
 
+
             const notificationNextIntercampi = await axios.get(
-                "http://localhost:8080/api/routes/notification"
+                "http://localhost:8080/api/notifications/intercampi",
+                {
+                    params: { role: userRole },
+                    headers: { Authorization: `Bearer ${token}` },
+                    validateStatus: () => true
+                }
             );
 
-            setNextIntercampi(notificationNextIntercampi.data);
-
+            if (notificationNextIntercampi.status === 200) {
+                setNextIntercampi(notificationNextIntercampi.data);
+            } else {
+                setNextIntercampi(null);
+            }
 
             setNotification(notificationsRes.data);
 

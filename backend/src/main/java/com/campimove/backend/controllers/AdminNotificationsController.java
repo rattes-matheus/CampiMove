@@ -5,9 +5,9 @@ import com.campimove.backend.entities.AdminNotification;
 import com.campimove.backend.enums.Role;
 import com.campimove.backend.repositories.AdminNotificationsRepository;
 import com.campimove.backend.services.AdminNotificationService;
+import com.campimove.backend.services.IntercampiTimeNotificationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,14 +22,26 @@ public class AdminNotificationsController {
     @Autowired
     private AdminNotificationService service;
 
+    @Autowired
+    private IntercampiTimeNotificationService intercampiService;
+
     @PostMapping
     public ResponseEntity<String> sendNotification(@Valid @RequestBody AdminNotificationsDTO formData) {
         service.sendNotification(formData.title(), formData.message(), formData.programmedTime(), formData.timeUnit(), formData.target());
         return ResponseEntity.status(201).body("Notification send successfuly!");
     }
 
-    @GetMapping
+    @GetMapping("/list")
     public ResponseEntity<List<AdminNotification>> getNotifications(@RequestParam Role role) {
         return ResponseEntity.status(200).body(service.getNotificationsByRole(role));
+    }
+
+    @GetMapping("/intercampi")
+    public ResponseEntity<?> getIntercampiNotification(@RequestParam Role role) {
+        if(role == Role.DRIVER) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(intercampiService.getNextIntercampi());
     }
 }

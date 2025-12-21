@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -38,6 +37,7 @@ public class AdminNotification {
     @Enumerated(EnumType.STRING)
     @NotNull
     private NotificationTarget target;
+
 
 
     public AdminNotification(String title, String message, Integer programmedTime, NotificationTarget target) {

@@ -62,7 +62,14 @@ export default function AdminDashboardPage() {
   const [timeUnit, setTimeUnit] = useState<"minutes" | "hours" | "days">("minutes");
   const router = useRouter();
   const [notificationTarget, setNotificationTarget] =
-    useState<"ALL" | "STUDENTS" | "PROFESSORS">("ALL");
+    useState<
+      "ALL" |
+      "STUDENTS" |
+      "PROFESSORS" |
+      "DRIVERS" |
+      "STUDENTS_AND_PROFESSORS"
+    >("ALL");
+
 
 
   useEffect(() => {
@@ -383,7 +390,12 @@ export default function AdminDashboardPage() {
                         <SelectItem value="ALL">Todos os usuários</SelectItem>
                         <SelectItem value="STUDENTS">Apenas alunos</SelectItem>
                         <SelectItem value="PROFESSORS">Apenas professores</SelectItem>
+                        <SelectItem value="DRIVERS">Apenas motoristas</SelectItem>
+                        <SelectItem value="STUDENTS_AND_PROFESSORS">
+                          Alunos e professores
+                        </SelectItem>
                       </SelectContent>
+
                     </Select>
                   </div>
 
@@ -397,7 +409,7 @@ export default function AdminDashboardPage() {
 
             </CardContent>
           </Card>
-
+        
           {/* DENÚNCIAS */}
           <Card className="lg:col-span-2">
             <CardHeader>
