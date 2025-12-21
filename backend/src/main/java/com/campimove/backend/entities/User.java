@@ -17,24 +17,24 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name")
-    private String name;
-
-    @Column(name = "email")
+    @Column(name = "email", unique = true, nullable = false) 
     private String email;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false) 
     private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
-    private Role role;
+    private Role role; 
 
     @Column(name = "verified")
-    private boolean verified;
+    private boolean verified; 
 
     @Column(name = "active")
-    private boolean active;
+    private boolean active; 
+
+    @Column(name = "name")
+    private String name;
 
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;
@@ -52,5 +52,3 @@ public class User {
         this.rating = 0.0;
     }
 }
-
-

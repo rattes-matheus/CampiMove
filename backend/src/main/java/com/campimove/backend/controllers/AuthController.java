@@ -2,7 +2,6 @@ package com.campimove.backend.controllers;
 
 import com.campimove.backend.dtos.ChatUserResponseDTO;
 import com.campimove.backend.entities.User;
-import com.campimove.backend.enums.Role;
 import com.campimove.backend.repositories.UserRepository;
 import com.campimove.backend.services.JwtService;
 import lombok.RequiredArgsConstructor;
