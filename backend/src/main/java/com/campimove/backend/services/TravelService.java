@@ -3,8 +3,10 @@ package com.campimove.backend.services;
 import com.campimove.backend.dtos.TripDetailsDTO;
 import com.campimove.backend.dtos.UpcomingTravelDTO;
 import com.campimove.backend.entities.ChatMessageEntity;
+import com.campimove.backend.entities.TravelRating;
 import com.campimove.backend.entities.User;
 import com.campimove.backend.repositories.ChatMessageRepository;
+import com.campimove.backend.repositories.TravelRatingRepository;
 import com.campimove.backend.repositories.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,9 @@ public class TravelService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private TravelRatingRepository travelRatingRepository;
+
     public List<UpcomingTravelDTO> getUpcomingTravelsForUser(String userId) {
 
         List<String> acceptedRoomIds = repository.findAcceptedRoomIdsByRecipientId(userId);
@@ -52,12 +57,31 @@ public class TravelService {
 
                 String motoristName = (motorist != null) ? motorist.getName() : "Motorista Desconhecido";
 
+                System.out.println(motoristName);
+
+                TravelRating[] rating = travelRatingRepository.findAllByMotoristName(motoristName);
+
+                if (rating.length == 0) {
+                    return new UpcomingTravelDTO(
+                            motoristName,
+                            tripDetails.origin(),
+                            tripDetails.destination(),
+                            tripDetails.schedule(),
+                            false,
+                            0.0
+                    );
+                }
+
                 return new UpcomingTravelDTO(
                         motoristName,
                         tripDetails.origin(),
                         tripDetails.destination(),
-                        tripDetails.schedule()
+                        tripDetails.schedule(),
+                        true,
+                        rating[0].getRating()
                 );
+
+
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
@@ -92,7 +116,9 @@ public class TravelService {
                         passengerName,
                         tripDetails.origin(),
                         tripDetails.destination(),
-                        tripDetails.schedule()
+                        tripDetails.schedule(),
+                        false,
+                        0.0
                 );
             } catch (IOException e) {
                 e.printStackTrace();

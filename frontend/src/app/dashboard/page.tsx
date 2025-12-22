@@ -22,44 +22,17 @@ import BusSchedule from '@/lib/interfaces/BusSchedule';
 import axios from 'axios';
 import {useRouter} from 'next/navigation';
 
-
-const initialRecentTravels = [
-    {
-        id: 'travel-1',
-        destination: 'Campus II',
-        driver: 'João da Silva',
-        date: '2024-07-25',
-        rated: false,
-    },
-    {
-        id: 'travel-2',
-        destination: 'Biblioteca Central',
-        driver: 'Maria Souza',
-        date: '2024-07-24',
-        rated: true,
-        rating: 5,
-    },
-    {
-        id: 'travel-3',
-        destination: 'Campus Principal',
-        driver: 'Samuel Wilson',
-        date: '2024-07-22',
-        rated: false,
-    },
-];
-
 type NextTravel = {
     motoristName: string;
     origin: string;
     destination: string;
     schedule: string;
+    rated: boolean
+    rating: number;
 };
 
-type Travel = typeof initialRecentTravels[0];
-
 export default function DashboardPage() {
-    const [recentTravels, setRecentTravels] = useState(initialRecentTravels);
-    const [selectedTravel, setSelectedTravel] = useState<Travel | null>(null);
+    const [selectedTravel, setSelectedTravel] = useState<NextTravel | null>(null);
     const [rating, setRating] = useState(0);
     const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
     const {toast} = useToast();
@@ -93,11 +66,13 @@ export default function DashboardPage() {
             });
 
             setNextTravels(travelsRes.data);
+
+            console.log(travelsRes.data)
         }
         fetchData();
     }, [router]);
 
-    const handleRateClick = (travel: Travel) => {
+    const handleRateClick = (travel: NextTravel) => {
         setSelectedTravel(travel);
         setRating(0); // Resetar avaliação
         setIsRatingDialogOpen(true);
@@ -112,18 +87,27 @@ export default function DashboardPage() {
 
     const handleRatingSubmit = () => {
         if (selectedTravel && rating > 0) {
-            console.log(`Enviando avaliação ${rating} para a viagem ${selectedTravel.id}`);
-            setRecentTravels(travels =>
-                travels.map(t =>
-                    t.id === selectedTravel.id ? {...t, rated: true, rating: rating} : t
-                )
-            );
+
+            let token = null;
+            if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+            if (!token) return router.push("/login");
+
+            axios.post("http://localhost:8080/api/rating", {
+                motoristName: selectedTravel.motoristName,
+                rating: rating
+            }, {
+                headers: {Authorization: `Bearer ${token}`}
+            },)
+
             toast({
                 title: 'Obrigado pelo seu feedback!',
-                description: `Você avaliou sua viagem com ${selectedTravel.driver} com ${rating} estrelas.`,
+                description: `Você avaliou sua viagem com ${selectedTravel.motoristName} com ${rating} estrelas.`,
             });
             setIsRatingDialogOpen(false);
             setSelectedTravel(null);
+
+            window.location.reload();
+
         } else {
             toast({
                 title: 'Avaliação inválida',
@@ -209,12 +193,12 @@ export default function DashboardPage() {
                                 <CardDescription>Veja e avalie suas viagens passadas.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {recentTravels.map((travel) => (
-                                    <div key={travel.id}
+                                {nextTravels.map((travel) => (
+                                    <div key={travel.motoristName}
                                          className="flex items-center justify-between p-2 rounded-lg hover:bg-accent">
                                         <div>
                                             <p className="font-semibold">{travel.destination}</p>
-                                            <p className="text-sm text-muted-foreground">com {travel.driver} em {travel.date}</p>
+                                            <p className="text-sm text-muted-foreground">com {travel.motoristName} em {travel.schedule}</p>
                                         </div>
                                         {travel.rated ? (
                                             <div className="flex items-center gap-1 text-yellow-500">
@@ -237,7 +221,7 @@ export default function DashboardPage() {
                                 <DialogHeader>
                                     <DialogTitle>Avalie sua viagem para {selectedTravel.destination}</DialogTitle>
                                     <DialogDescription>
-                                        Como foi sua experiência com {selectedTravel.driver} em {selectedTravel.date}?
+                                        Como foi sua experiência com {selectedTravel.motoristName} em {selectedTravel.schedule}?
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="flex justify-center items-center gap-2 py-4">
