@@ -43,6 +43,7 @@ export default function FindARidePage() {
     const [meId, setMeId] = useState<number | null>(null);
     const { toast } = useToast();
     const router = useRouter();
+    const [ratings, setRatings] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -99,6 +100,30 @@ export default function FindARidePage() {
         fetchReports();
     }, [meId, drivers]);
 
+    useEffect(() => {
+        const fetchData = async () => {
+            let token = null;
+            if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
+            if (!token) {
+                router.push("/login");
+                return;
+            }
+
+            try {
+                const res = await axios.get("http://localhost:8080/api/rating", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                setRatings(res.data);
+
+            } catch (error) {
+                console.error("Failed to fetch data", error);
+                router.push("/login");
+            }
+        };
+        fetchData();
+    }, []);
+
 const handleReportSubmit = async (e: React.FormEvent) => {
     if (selectedMotorist && reportReason.trim()) {
         e.preventDefault();
@@ -147,7 +172,20 @@ const checkIfUserAlreadyReported = async (motorist: Driver) => {
     }
 };
 
+function getRatingsMedium(motorist: string) {
+    const rating = ratings.filter((rating) => rating.motoristName === motorist);
 
+    let sum = 0;
+
+    for (let r of rating) {
+        console.log(r)
+        sum += r.rating;
+    }
+
+    sum /= rating.length;
+
+    return sum;
+}
 
 const filteredTransport = drivers.filter((option) => {
     const typeMatch = transportType === 'all' || option.transportType.toUpperCase() === transportType.toUpperCase();
@@ -238,7 +276,7 @@ return (
                                                         <Star
                                                             className="h-5 w-5 text-yellow-400 fill-yellow-400" />
                                                         <span
-                                                            className="font-bold">{option.rating.toFixed(1)}</span>
+                                                            className="font-bold">{getRatingsMedium(option.motorist).toFixed(1)}</span>
                                                     </div>
                                                     <Button size="sm" asChild>
                                                         <Link href={`/chat/${option.id}`}>Reservar Agora</Link>
