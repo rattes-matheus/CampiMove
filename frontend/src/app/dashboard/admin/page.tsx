@@ -12,13 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger,
-  DialogClose,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogTrigger,
+    DialogClose,
 } from "@/components/ui/dialog";
 
 import { FileText, ArrowRight } from 'lucide-react';
@@ -48,18 +48,18 @@ type Notice = {
 
 
 type UserReport = {
-  id: number;
-  userid: number;
-  driverName: string;
-  report_text: string;
+    id: number;
+    userid: number;
+    driverName: string;
+    report_text: string;
 };
 
 type User = {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  active: boolean;
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    active: boolean;
 };
 
 export default function AdminDashboardPage() {
@@ -212,8 +212,8 @@ export default function AdminDashboardPage() {
                 toast({ title: "Sucesso", description: "Usuário banido." });
                 setModified(modified + 1);
             }).catch(() => {
-                toast({ title: 'Erro', description: 'Erro ao banir usuário.', variant: 'destructive' });
-            });
+            toast({ title: 'Erro', description: 'Erro ao banir usuário.', variant: 'destructive' });
+        });
     };
 
     const handleBanUser = (userId: number) => {
@@ -222,8 +222,8 @@ export default function AdminDashboardPage() {
                 toast({ title: "Sucesso", description: "Usuário banido." });
                 setModified(prev => prev + 1);
             }).catch(() => {
-                toast({ title: 'Erro', description: 'Erro ao banir usuário.', variant: 'destructive' });
-            });
+            toast({ title: 'Erro', description: 'Erro ao banir usuário.', variant: 'destructive' });
+        });
     };
 
     const handleUnbanUser = (userId: number) => {
@@ -232,8 +232,8 @@ export default function AdminDashboardPage() {
                 toast({ title: "Sucesso", description: "Usuário reativado." });
                 setModified(prev => prev + 1);
             }).catch(() => {
-                toast({ title: 'Erro', description: 'Erro ao reativar usuário.', variant: 'destructive' });
-            });
+            toast({ title: 'Erro', description: 'Erro ao reativar usuário.', variant: 'destructive' });
+        });
     };
 
     const handleSendNotice = () => {
@@ -399,28 +399,147 @@ export default function AdminDashboardPage() {
 
                         </CardContent>
                     </Card>
+                    {/* NOTIFICAÇÕES */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Enviar Notificação</CardTitle>
+                            <CardDescription>Envie notificações para todos ou para grupos específicos.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <CardContent className="space-y-4">
+                                <Input
+                                    placeholder="Título da notificação"
+                                    value={notificationTitle}
+                                    onChange={(e) => setNotificationTitle(e.target.value)}
+                                />
+
+                                <Textarea
+                                    placeholder="Mensagem..."
+                                    value={notification}
+                                    onChange={(e) => setNotification(e.target.value)}
+                                    rows={5}
+                                />
+
+                                <div className="flex items-center gap-2">
+
+
+
+                                    {/* GRUPO DE BOTÕES */}
+                                    <div className="space-y-2">
+                                        <Label className="text-sm text-muted-foreground">Programar para:</Label>
+
+                                        <div className="flex items-center gap-3">
+
+                                            <div className="relative">
+                                                <Input
+                                                    type="number"
+                                                    min={1}
+                                                    value={timeValue}
+                                                    onChange={(e) => setTimeValue(Number(e.target.value))}
+                                                    className="w-24 text-center rounded-lg"
+                                                />
+                                            </div>
+
+                                            {/* GRUPO DE BOTÕES */}
+                                            <div className="flex overflow-hidden rounded-md border border-gray-300">
+
+                                                <button
+                                                    className={`px-3 py-2 text-sm transition ${timeUnit === "minutes"
+                                                        ? "bg-orange-500 text-white"
+                                                        : "bg-gray-100 hover:bg-gray-200"
+                                                    }`}
+                                                    onClick={() => setTimeUnit("minutes")}
+                                                    type="button"
+                                                >
+                                                    Min
+                                                </button>
+
+                                                <button
+                                                    className={`px-3 py-2 text-sm transition border-l border-gray-300 ${timeUnit === "hours"
+                                                        ? "bg-orange-500 text-white"
+                                                        : "bg-gray-100 hover:bg-gray-200"
+                                                    }`}
+                                                    onClick={() => setTimeUnit("hours")}
+                                                    type="button"
+                                                >
+                                                    Hor
+                                                </button>
+
+                                                <button
+                                                    className={`px-3 py-2 text-sm transition border-l border-gray-300 ${timeUnit === "days"
+                                                        ? "bg-orange-500 text-white"
+                                                        : "bg-gray-100 hover:bg-gray-200"
+                                                    }`}
+                                                    onClick={() => setTimeUnit("days")}
+                                                    type="button"
+                                                >
+                                                    Dias
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm text-muted-foreground">
+                                            Enviar para:
+                                        </Label>
+
+                                        <Select
+                                            value={notificationTarget}
+                                            onValueChange={(value) =>
+                                                setNotificationTarget(value as "ALL" | "STUDENTS" | "PROFESSORS")
+                                            }
+                                        >
+                                            <SelectTrigger className="w-full focus:ring-orange-500">
+                                                <SelectValue placeholder="Enviar para" />
+                                            </SelectTrigger>
+
+                                            <SelectContent>
+                                                <SelectItem value="ALL">Todos os usuários</SelectItem>
+                                                <SelectItem value="STUDENTS">Apenas alunos</SelectItem>
+                                                <SelectItem value="PROFESSORS">Apenas professores</SelectItem>
+                                                <SelectItem value="DRIVERS">Apenas motoristas</SelectItem>
+                                                <SelectItem value="STUDENTS_AND_PROFESSORS">
+                                                    Alunos e professores
+                                                </SelectItem>
+                                            </SelectContent>
+
+                                        </Select>
+                                    </div>
+
+                                </div>
+
+
+                                <Button className="w-full" onClick={handleSendNotification}>
+                                    Enviar
+                                </Button>
+                            </CardContent>
+
+                        </CardContent>
+                    </Card>
                     {/* INCIDENTES */}
-        <Card>
-            <CardHeader>
-              <CardTitle>Incidentes Ocorridos</CardTitle>
-              <CardDescription>
-                Visualize e acompanhe registros de incidentes reportados.
-              </CardDescription>
-            </CardHeader>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Incidentes Ocorridos</CardTitle>
+                            <CardDescription>
+                                Visualize e acompanhe registros de incidentes reportados.
+                            </CardDescription>
+                        </CardHeader>
 
-            <CardContent className="flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
-                Aqui você pode consultar todos os incidentes relatados no sistema.
-              </div>
+                        <CardContent className="flex justify-between items-center">
+                            <div className="text-sm text-muted-foreground">
+                                Aqui você pode consultar todos os incidentes relatados no sistema.
+                            </div>
 
-              <Button
-                onClick={() => router.push("/dashboard/admin/report")}
-                className="flex items-center gap-2"
-              >
-                Ver Incidentes
-              </Button>
-                 </CardContent>
-               </Card>
+                            <Button
+                                onClick={() => router.push("/dashboard/admin/report")}
+                                className="flex items-center gap-2"
+                            >
+                                Ver Incidentes
+                            </Button>
+                        </CardContent>
+                    </Card>
 
 
                     <Card>
@@ -688,9 +807,9 @@ export default function AdminDashboardPage() {
                         </CardContent>
                     </Card>
 
+                </div>
+            </main>
+            <Footer />
         </div>
-      </main>
-      <Footer />
-    </div>
-  );
+    );
 }

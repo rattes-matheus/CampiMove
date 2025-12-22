@@ -5,7 +5,7 @@ import {DashboardHeader} from '@/components/dashboard/header';
 import {Footer} from '@/components/landing/footer';
 import {Card, CardContent, CardHeader, CardTitle, CardDescription} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
-import {Bus, CalendarPlus, Clock, Star} from 'lucide-react';
+import {Bus, CalendarPlus, Clock, Star, AlertTriangle, Megaphone} from 'lucide-react';
 import Link from 'next/link';
 import {
     Dialog,
@@ -31,6 +31,15 @@ type NextTravel = {
     rating: number;
 };
 
+type Notice = {
+    id: number;
+    title: string;
+    message: string;
+    priority: 'HIGH' | 'MEDIUM' | 'LOW';
+    active: boolean;
+    date: string;
+};
+
 export default function DashboardPage() {
     const [selectedTravel, setSelectedTravel] = useState<NextTravel | null>(null);
     const [rating, setRating] = useState(0);
@@ -41,6 +50,7 @@ export default function DashboardPage() {
     const now = new Date();
     const router = useRouter();
     const [nextTravels, setNextTravels] = useState<NextTravel[]>([]);
+    const [notices, setNotices] = useState<Notice[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -55,6 +65,7 @@ export default function DashboardPage() {
             const userId: string = res.data.id;
 
             if (userRole === "DRIVER") return router.push("/dashboard/motorist");
+            if (userRole === "ADMIN") return router.push("/dashboard/admin")
 
             console.log(userId);
 
@@ -68,6 +79,13 @@ export default function DashboardPage() {
             setNextTravels(travelsRes.data);
 
             console.log(travelsRes.data)
+
+            const noticesRes = await axios.get<Notice[]>(
+                "http://localhost:8080/api/notices/get",
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setNotices(noticesRes.data);
         }
         fetchData();
     }, [router]);
@@ -117,6 +135,9 @@ export default function DashboardPage() {
         }
     };
 
+    const highNotices = notices.filter(n => n.priority === 'HIGH');
+    const mediumNotices = notices.filter(n => n.priority === 'MEDIUM');
+    const lowNotices = notices.filter(n => n.priority === 'LOW');
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
@@ -245,6 +266,124 @@ export default function DashboardPage() {
                             </DialogContent>
                         )}
                     </Dialog>
+                    {/* AVISOS IMPORTANTES */}
+                    <Card className="mb-6 border-l-4 border-orange-500">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <CalendarPlus className="text-orange-500" />
+                                Avisos Importantes
+                            </CardTitle>
+                            <CardDescription>
+                                Comunicados que exigem sua atenção
+                            </CardDescription>
+                        </CardHeader>
+
+                        <CardContent className="space-y-3 max-h-[200px] overflow-y-auto pr-2">
+                            {/* HIGH */}
+                            {highNotices.length > 0 && highNotices.map(notice => (
+                                <div
+                                    key={notice.id}
+                                    className="p-3 rounded-md border border-red-500 bg-red-50"
+                                >
+                                    <p className="font-semibold text-red-700">
+                                        🚨 {notice.title}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {notice.message}
+                                    </p>
+                                </div>
+                            ))}
+
+                            {/* MEDIUM */}
+                            {mediumNotices.length > 0 && mediumNotices.map(notice => (
+                                <div
+                                    key={notice.id}
+                                    className="p-3 rounded-md border border-orange-400 bg-orange-50"
+                                >
+                                    <p className="font-semibold text-orange-700">
+                                        ℹ {notice.title}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {notice.message}
+                                    </p>
+                                </div>
+                            ))}
+
+                            {highNotices.length === 0 && mediumNotices.length === 0 && (
+                                <p className="text-center text-muted-foreground p-4">
+                                    Nenhum aviso importante no momento.
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
+                    {/* OUTROS AVISOS */}
+                    <Card className="mb-8">
+                        <CardHeader>
+                            <CardTitle className="text-base">
+                                Outros Avisos
+                            </CardTitle>
+                            <CardDescription>
+                                Informações gerais
+                            </CardDescription>
+                        </CardHeader>
+
+                        <CardContent className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                            {lowNotices.length > 0 ? lowNotices.map(notice => (
+                                <div
+                                    key={notice.id}
+                                    className="p-2 rounded-md hover:bg-accent transition"
+                                >
+                                    <p className="text-sm font-medium">
+                                        {notice.title}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {notice.message}
+                                    </p>
+                                </div>
+                            )) : (
+                                <p className="text-center text-muted-foreground p-4">
+                                    Nenhum aviso de baixa prioridade.
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
+                    {/* NOVO CARD: REPORTAR PROBLEMA (PARA O USUÁRIO) */}
+                    <Card className="hover:shadow-lg transition-shadow border-2 border-red-300">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-lg font-medium text-red-600">Reportar Problema</CardTitle>
+                            <Megaphone className="h-6 w-6 text-red-600" />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground mb-4">Houve algum problema com o ônibus ou a rota?
+                                Reporte à administração.</p>
+                            <Link href="/dashboard/report" passHref legacyBehavior>
+                                <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
+                                    Abrir Novo Report
+                                </Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+                    {/* FIM NOVO CARD */}
+                    {/* CARD: VER DENÚNCIAS DO SITE */}
+                    <Card className="hover:shadow-lg transition-shadow border-2 border-orange-300">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-lg font-medium text-orange-600">
+                                Denúncias do Sistema
+                            </CardTitle>
+                            <AlertTriangle className="h-6 w-6 text-orange-600" />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground mb-4">
+                                Veja todos os problemas e denúncias reportados pelos usuários do sistema.
+                            </p>
+                            <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white" asChild>
+                                <Link href="/dashboard/all-incidents">
+                                    Ver Denúncias
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                    {/* FIM CARD */}
                 </div>
             </main>
             <Footer/>
