@@ -350,8 +350,7 @@ export default function ChatPage() {
             status: 'Agendada'
         };
 
-        const existingTravels = JSON.parse(localStorage.getItem('acceptedTravels') || '[]');
-        localStorage.setItem('acceptedTravels', JSON.stringify([...existingTravels, acceptedTravel]));
+        console.log(proposal)
 
         if (recipientUser && userId && username) {
             const acceptedMessage: Message = {
@@ -371,6 +370,10 @@ export default function ChatPage() {
 
             axios.put("http://localhost:8080/travels/status", {
                 id: roomId,
+                origin: proposal.origin,
+                destination: proposal.destination,
+                price: proposal.price,
+                schedule: proposal.schedule,
                 status: true
             }, {
                 headers: {Authorization: `Bearer ${token}`}

@@ -7,18 +7,25 @@ services:
     depends_on:
       - postgres
     environment:
+      # Configuração do Banco de Dados
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/campimove_api
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      
+      # REMOVIDA A LINHA: SPRING_JPA_HIBERNATE_DDL_AUTO=update 
+      # Agora, spring.jpa.hibernate.ddl-auto=none do properties será usado.
 
+      # Configuração de E-mail
       - SPRING_MAIL_HOST=smtp.gmail.com
       - SPRING_MAIL_PORT=587
       - SPRING_MAIL_USERNAME=campimove@gmail.com
       - SPRING_MAIL_PASSWORD=yjewagawctdcepyc
-
       - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
       - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+
+      - TZ=America/Sao_Paulo
+      - JAVA_TOOL_OPTIONS=-Duser.timezone=America/Sao_Paulo
+
     ports:
       - "8080:8080"
 
@@ -39,6 +46,8 @@ services:
       - POSTGRES_DB=campimove_api
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=admin
+      - TZ=America/Sao_Paulo
+    command: ["postgres", "-c", "timezone=America/Sao_Paulo"]
     ports:
       - "5432:5432"
     volumes:

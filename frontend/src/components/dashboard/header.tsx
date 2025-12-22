@@ -2,40 +2,25 @@
 
 import Link from 'next/link';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 import { useRouter, usePathname } from 'next/navigation';
 import { Bell } from 'lucide-react';
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import {toast} from "@/hooks/use-toast";
-
-const notifications = [
-    {
-        title: "Sua carona foi confirmada!",
-        description: "João da Silva irá te buscar às 14:00.",
-    },
-    {
-        title: "Lembrete: Ônibus Intercampus",
-        description: "O próximo ônibus sai em 15 minutos.",
-    },
-    {
-        title: "Nova carona disponível",
-        description: "Uma nova opção de carona corresponde à sua rota.",
-    },
-];
+import { toast } from "@/hooks/use-toast";
 
 export function DashboardHeader() {
     const router = useRouter();
-
+    const [notifications, setNotification] = useState<{ title: string, message: string, createdAt: string }[]>([]);
     let token: any = null;
 
     if (typeof window !== 'undefined') token = localStorage.getItem('jwt_token');
@@ -43,6 +28,13 @@ export function DashboardHeader() {
     const [username, setUsername] = useState("")
     const [email, setEmail] = useState("");
     const [profilePictureURL, setProfilePictureURL] = useState("");
+    const [nextIntercampi, setNextIntercampi] = useState<{
+        route: string;
+        schedule: string;
+        minutesLeft: number;
+        formattedTime: string;
+    } | null>(null);
+
 
     const handleLogout = () => {
         localStorage.removeItem("jwt_token")
@@ -52,15 +44,49 @@ export function DashboardHeader() {
 
     async function fetchData() {
         try {
-            const response = await axios.get<{email: string, name: string}>(`http://localhost:8080/auth/me`, {
+            const response = await axios.get<{
+                email: string;
+                name: string;
+                role: "STUDENT" | "TEACHER" | "DRIVER" | "ADMIN";
+                profilePictureURL: string;
+            }>("http://localhost:8080/auth/me", {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
 
+            const userRole = response.data.role;
+
+
             setUsername(response.data.name);
             setEmail(response.data.email);
             setProfilePictureURL("http://localhost:8080" + response.data.profilePictureURL);
+
+            const notificationsRes = await axios.get(
+                "http://localhost:8080/api/notifications/list",
+                {
+                    params: { role: userRole },
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+
+
+            const notificationNextIntercampi = await axios.get(
+                "http://localhost:8080/api/notifications/intercampi",
+                {
+                    params: { role: userRole },
+                    headers: { Authorization: `Bearer ${token}` },
+                    validateStatus: () => true
+                }
+            );
+
+            if (notificationNextIntercampi.status === 200) {
+                setNextIntercampi(notificationNextIntercampi.data);
+            } else {
+                setNextIntercampi(null);
+            }
+
+            setNotification(notificationsRes.data);
 
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
@@ -71,6 +97,20 @@ export function DashboardHeader() {
             });
         }
     }
+
+    function formatDate(dateString: string) {
+        const date = new Date(dateString);
+
+        const dia = String(date.getDate()).padStart(2, '0');
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const ano = date.getFullYear();
+
+        const hora = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+
+        return `${dia}/${mes}/${ano} ${hora}:${min}`;
+    }
+
 
     useEffect(() => {
         fetchData()
@@ -88,18 +128,44 @@ export function DashboardHeader() {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
                                     <Bell className="h-5 w-5" />
-                                    <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-primary" />
                                     <span className="sr-only">Alternar notificações</span>
                                 </Button>
                             </DropdownMenuTrigger>
+
                             <DropdownMenuContent className="w-80" align="end">
                                 <DropdownMenuLabel>Notificações</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
+
+                                {nextIntercampi && (
+                                    <>
+                                        <DropdownMenuItem
+                                            key="intercampi-alert"
+                                            className="flex flex-col items-start gap-1 relative bg-amber-50 border border-amber-200 rounded-md p-3 cursor-default"
+                                        >
+                                            <p className="font-semibold">Próximo Intercampi</p>
+
+                                            <p className="text-xs text-muted-foreground">
+                                                Rota {nextIntercampi.route} • {nextIntercampi.schedule}
+                                            </p>
+
+                                            <p className="text-xs text-muted-foreground">
+                                                Chega em {nextIntercampi.formattedTime}
+                                            </p>
+                                        </DropdownMenuItem>
+
+                                        <DropdownMenuSeparator />
+                                    </>
+                                )}
+
                                 {notifications.length > 0 ? (
-                                    notifications.map((notification, index) => (
-                                        <DropdownMenuItem key={index} className="flex flex-col items-start gap-1">
-                                            <p className="font-semibold">{notification.title}</p>
-                                            <p className="text-xs text-muted-foreground">{notification.description}</p>
+                                    notifications.map((n, index) => (
+                                        <DropdownMenuItem key={index} className="flex flex-col items-start gap-1 relative">
+                                            <p className="font-semibold">{n.title}</p>
+                                            <p className="text-xs text-muted-foreground">{n.message}</p>
+
+                                            <span className="text-[10px] text-muted-foreground absolute bottom-1 right-2">
+                                                {formatDate(n.createdAt)}
+                                            </span>
                                         </DropdownMenuItem>
                                     ))
                                 ) : (
@@ -107,6 +173,7 @@ export function DashboardHeader() {
                                 )}
                             </DropdownMenuContent>
                         </DropdownMenu>
+
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>

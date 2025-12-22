@@ -19,6 +19,9 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessageEntity, 
     @Query("SELECT e FROM ChatMessageEntity e WHERE e.roomId IN :roomIds AND e.tripProposal IS NOT NULL")
     List<ChatMessageEntity> findProposalMessagesByRoomIds(@Param("roomIds") List<String> roomIds);
 
+    @Query("SELECT e FROM ChatMessageEntity e WHERE e.roomId IN :roomIds AND e.tripProposal IS NOT NULL AND e.isTripAccepted = true")
+    List<ChatMessageEntity> findProposalMessagesByAcceptedRoomIds(@Param("roomIds") List<String> roomIds);
+
     @Query("SELECT DISTINCT e.roomId FROM ChatMessageEntity e WHERE e.recipientId = :userId AND e.isTripAccepted = true")
     List<String> findAcceptedRoomIdsByRecipientId(@Param("userId") String userId);
 }

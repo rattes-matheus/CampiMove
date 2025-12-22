@@ -30,7 +30,7 @@ public class TravelController {
 
     @PutMapping("/status")
     public ResponseEntity<String> changeTripStatus(@RequestBody ChangeStatusDTO formData) {
-        travelService.changeTripStatus(formData.id(), formData.status());
+        travelService.changeTripStatus(formData.id(), formData.origin(), formData.destination(), formData.price(), formData.schedule(), formData.status());
 
         return ResponseEntity.ok("update was successful");
     }

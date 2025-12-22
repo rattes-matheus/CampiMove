@@ -42,7 +42,7 @@ public class TravelService {
             return Collections.emptyList();
         }
 
-        List<ChatMessageEntity> proposalMessages = repository.findProposalMessagesByRoomIds(acceptedRoomIds);
+        List<ChatMessageEntity> proposalMessages = repository.findProposalMessagesByAcceptedRoomIds(acceptedRoomIds);
 
         return proposalMessages.stream().map(message -> {
             try {
@@ -97,7 +97,7 @@ public class TravelService {
             return Collections.emptyList();
         }
 
-        List<ChatMessageEntity> proposalMessages = repository.findProposalMessagesByRoomIds(acceptedRoomIds);
+        List<ChatMessageEntity> proposalMessages = repository.findProposalMessagesByAcceptedRoomIds(acceptedRoomIds);
 
         return proposalMessages.stream().map(message -> {
             try {
@@ -127,13 +127,18 @@ public class TravelService {
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    public void changeTripStatus(String id, boolean status) {
+    public void changeTripStatus(String id, String origin, String destination, String price, String schedule, boolean status) {
         List<String> listOfRoomIds = new LinkedList<>();
         listOfRoomIds.add(id);
-
-        ChatMessageEntity proposal = repository.findProposalMessagesByRoomIds(listOfRoomIds).getLast();
-        proposal.setIsTripAccepted(status);
-        repository.save(proposal);
+        List<ChatMessageEntity> proposals = repository.findProposalMessagesByRoomIds(listOfRoomIds);
+        for (ChatMessageEntity proposal : proposals) {
+            if (proposal.getTripProposal().contains(origin) && proposal.getTripProposal().contains(destination) && proposal.getTripProposal().contains(price) && proposal.getTripProposal().contains(schedule)) {
+                proposal.setIsTripAccepted(status);
+                repository.save(proposal);
+                return;
+            }
+        }
     }
+
 
 }

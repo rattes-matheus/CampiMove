@@ -13,23 +13,32 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class EmailService {
-    private final JavaMailSender javaMailSender;
-    private final EmailVerificationRepository emailVerificationRepository;
+  private final JavaMailSender javaMailSender;
+  private final EmailVerificationRepository emailVerificationRepository;
 
-    public void sendVerificationEmail(String email) {
-        String code = String.format("%06d", new SecureRandom().nextInt(1000000));
+  public void sendVerificationEmail(String email) {
+    String code = String.format("%06d", new SecureRandom().nextInt(1000000));
 
-        EmailVerification verification = new EmailVerification();
-        verification.setEmail(email);
-        verification.setCode(code);
-        verification.setExpiresAt(LocalDateTime.now().plusMinutes(15));
-        emailVerificationRepository.save(verification);
+    EmailVerification verification = new EmailVerification();
+    verification.setEmail(email);
+    verification.setCode(code);
+    verification.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+    emailVerificationRepository.save(verification);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Codigo de verificacao - CampiMove");
-        message.setText(code);
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setTo(email);
+    message.setSubject("Codigo de verificacao - CampiMove");
+    message.setText(code);
 
-        javaMailSender.send(message);
-    }
+    javaMailSender.send(message);
+  }
+
+  public void sendPasswordResetEmail(String email, String link) {
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setTo(email);
+    message.setSubject("Redefinicao de senha - CampiMove");
+    message.setText(link);
+
+    javaMailSender.send(message);
+  }
 }

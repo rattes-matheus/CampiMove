@@ -19,7 +19,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Table(name = "routes")
 public class IntercampiRoute {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

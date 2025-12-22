@@ -2,6 +2,8 @@ package com.campimove.backend.controllers;
 
 import java.util.List;
 
+import com.campimove.backend.dtos.IntercampiTimeNotificationDTO;
+import com.campimove.backend.services.IntercampiTimeNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,9 @@ public class IntercampiRouteController {
     @Autowired
     private IntercampiRouteRepository repository;
 
+    @Autowired
+    private IntercampiTimeNotificationService service;
+
     @PostMapping
     public ResponseEntity<String> create(@RequestBody IntercampiRoutesFormDTO formData) {
         repository.save(new IntercampiRoute(formData.route(), formData.schedule()));
@@ -32,4 +37,9 @@ public class IntercampiRouteController {
         return ResponseEntity.ok(repository.findAll());
     }
 
+    @GetMapping("/notification")
+    public ResponseEntity<IntercampiTimeNotificationDTO> getNextRoute(){
+        IntercampiTimeNotificationDTO next = service.getNextIntercampi();
+        return ResponseEntity.status(200).body(next);
+    }
 }
