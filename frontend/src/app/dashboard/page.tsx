@@ -1,33 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
+import {DashboardHeader} from '@/components/dashboard/header';
+import {Footer} from '@/components/landing/footer';
+import {Card, CardContent, CardHeader, CardTitle, CardDescription} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Bus, CalendarPlus, Clock, Star} from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import axios from 'axios';
-
-import { DashboardHeader } from '@/components/dashboard/header';
-import { Footer } from '@/components/landing/footer';
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogTrigger,
+    DialogClose,
+} from "@/components/ui/dialog";
+import {useToast} from '@/hooks/use-toast';
 import BusSchedule from '@/lib/interfaces/BusSchedule';
+import axios from 'axios';
+import {useRouter} from 'next/navigation';
 
 type NextTravel = {
     motoristName: string;
@@ -76,7 +69,8 @@ export default function DashboardPage() {
 
             console.log(travelsRes.data)
         }
-      );
+        fetchData();
+    }, [router]);
 
     const handleRateClick = (travel: NextTravel) => {
         setSelectedTravel(travel);
@@ -121,44 +115,8 @@ export default function DashboardPage() {
                 variant: 'destructive',
             });
         }
-      );
-
-      setNotices(noticesRes.data);
     };
 
-    fetchData();
-  }, [router]);
-
-  useEffect(() => {
-    axios
-      .get<BusSchedule[]>('http://localhost:8080/api/routes')
-      .then(res => setSchedules(res.data))
-      .catch(err =>
-        console.log("Can't GET the available intercampis:", err.message)
-      );
-
-    setCurrentMinutes(now.getHours() * 60 + now.getMinutes());
-  }, [router, now]);
-
-  const handleRateClick = (travel: Travel) => {
-    setSelectedTravel(travel);
-    setRating(0);
-    setIsRatingDialogOpen(true);
-  };
-
-  const handleRatingSubmit = () => {
-    if (selectedTravel && rating > 0) {
-      console.log(
-        `Enviando avaliação ${rating} para a viagem ${selectedTravel.id}`
-      );
-
-      setRecentTravels(travels =>
-        travels.map(t =>
-          t.id === selectedTravel.id
-            ? { ...t, rated: true, rating }
-            : t
-        )
-      );
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
@@ -288,127 +246,8 @@ export default function DashboardPage() {
                         )}
                     </Dialog>
                 </div>
-
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button onClick={handleRatingSubmit}>
-                    Enviar Avaliação
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            )}
-          </Dialog>
-
-          <Card className="mb-6 border-l-4 border-orange-500">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarPlus className="text-orange-500" />
-                Avisos Importantes
-              </CardTitle>
-              <CardDescription>
-                Comunicados que exigem sua atenção
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-3 max-h-[200px] overflow-y-auto pr-2">
-              {highNotices.map(notice => (
-                <div
-                  key={notice.id}
-                  className="p-3 rounded-md border border-red-500 bg-red-50"
-                >
-                  <p className="font-semibold text-red-700">
-                    🚨 {notice.title}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {notice.message}
-                  </p>
-                </div>
-              ))}
-
-              {mediumNotices.map(notice => (
-                <div
-                  key={notice.id}
-                  className="p-3 rounded-md border border-orange-400 bg-orange-50"
-                >
-                  <p className="font-semibold text-orange-700">
-                    ℹ {notice.title}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {notice.message}
-                  </p>
-                </div>
-              ))}
-
-              {highNotices.length === 0 &&
-                mediumNotices.length === 0 && (
-                  <p className="text-center text-muted-foreground p-4">
-                    Nenhum aviso importante no momento.
-                  </p>
-                )}
-            </CardContent>
-          </Card>
-
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="text-base">
-                Outros Avisos
-              </CardTitle>
-              <CardDescription>
-                Informações gerais
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
-              {lowNotices.length > 0 ? (
-                lowNotices.map(notice => (
-                  <div
-                    key={notice.id}
-                    className="p-2 rounded-md hover:bg-accent transition"
-                  >
-                    <p className="text-sm font-medium">
-                      {notice.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {notice.message}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-muted-foreground p-4">
-                  Nenhum aviso de baixa prioridade.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow border-2 border-orange-300">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg font-medium text-orange-600">
-                Denúncias do Sistema
-              </CardTitle>
-              <AlertTriangle className="h-6 w-6 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Veja todos os problemas e denúncias reportados pelos
-                usuários do sistema.
-              </p>
-              <Button
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                asChild
-              >
-                <Link href="/dashboard/all-incidents">
-                  Ver Denúncias
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+            </main>
+            <Footer/>
         </div>
-      </main>
-
-      <Footer />
-    </div>
-  );
+    );
 }
