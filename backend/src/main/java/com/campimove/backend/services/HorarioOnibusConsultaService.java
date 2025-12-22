@@ -35,4 +35,9 @@ public class HorarioOnibusConsultaService {
         List<HorarioOnibus> proximos = horarioOnibusRepository.findProximosHorarios(origem, horarioAtual);
         return proximos.stream().findFirst();
     }
+
+    public List<HorarioOnibus> getHorariosInativos() {
+        return horarioOnibusRepository.findByAtivo(false);
+    }
+
 }

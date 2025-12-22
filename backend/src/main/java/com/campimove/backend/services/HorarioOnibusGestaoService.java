@@ -29,6 +29,14 @@ public class HorarioOnibusGestaoService {
         horario.setAtivo(false);
         return horarioOnibusRepository.save(horario);
     }
+
+    public void ativarHorario(Long id) {
+        HorarioOnibus horario = horarioOnibusRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Horário não encontrado"));
+
+        horario.setAtivo(true);
+        horarioOnibusRepository.save(horario);
+    }
     
     private void validarOrigem(String origem) {
         if (!origem.equals("C1") && !origem.equals("C2")) {

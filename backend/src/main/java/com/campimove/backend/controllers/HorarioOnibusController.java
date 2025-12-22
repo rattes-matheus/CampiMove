@@ -3,10 +3,12 @@ package com.campimove.backend.controllers;
 import com.campimove.backend.dtos.CriarHorarioRequest;
 import com.campimove.backend.dtos.HorarioOnibusResponse;
 import com.campimove.backend.dtos.InfoRotaResponse;
+import com.campimove.backend.dtos.IntercampiTimeNotificationDTO;
 import com.campimove.backend.entities.HorarioOnibus;
 import com.campimove.backend.services.HorarioOnibusConsultaService;
 import com.campimove.backend.services.HorarioOnibusGestaoService;
 import com.campimove.backend.services.HorarioOnibusMapper;
+import com.campimove.backend.services.IntercampiTimeNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,7 +26,10 @@ public class HorarioOnibusController {
     private final HorarioOnibusConsultaService consultaService;
     private final HorarioOnibusGestaoService gestaoService;
     private final HorarioOnibusMapper mapper;
-    
+
+    @Autowired
+    private IntercampiTimeNotificationService service;
+
     @Autowired
     public HorarioOnibusController(HorarioOnibusConsultaService consultaService,
                                   HorarioOnibusGestaoService gestaoService,
@@ -68,7 +74,16 @@ public class HorarioOnibusController {
     }
     
     @PostMapping
-    public ResponseEntity<HorarioOnibusResponse> createHorario(@RequestBody CriarHorarioRequest request) {
+    public ResponseEntity<Object> createHorario(@RequestBody CriarHorarioRequest request) {
+
+        for (HorarioOnibus horario : consultaService.getHorariosInativos()) {
+            if (Objects.equals(horario.getOrigem(), request.getOrigem()) && horario.getHorario() == request.getHorario()) {
+               gestaoService.ativarHorario(horario.getId());
+            }
+
+            return ResponseEntity.ok().build();
+        }
+
         try {
             HorarioOnibus novoHorario = gestaoService.criarHorario(request.getOrigem(), request.getHorario());
             HorarioOnibusResponse response = mapper.toResponse(novoHorario);
@@ -99,5 +114,11 @@ public class HorarioOnibusController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @GetMapping("/notification")
+    public ResponseEntity<IntercampiTimeNotificationDTO> getNextRoute(){
+        IntercampiTimeNotificationDTO next = service.getNextIntercampi();
+        return ResponseEntity.status(200).body(next);
     }
 }

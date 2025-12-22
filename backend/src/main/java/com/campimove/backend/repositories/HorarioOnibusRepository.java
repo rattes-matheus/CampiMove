@@ -16,4 +16,7 @@ public interface HorarioOnibusRepository extends JpaRepository<HorarioOnibus, Lo
     
     @Query("SELECT h FROM HorarioOnibus h WHERE h.origem = :origem AND h.horario >= :horarioAtual AND h.ativo = true ORDER BY h.horario ASC")
     List<HorarioOnibus> findProximosHorarios(String origem, LocalTime horarioAtual);
+
+    List<HorarioOnibus> findByAtivo(Boolean ativo);
+
 }

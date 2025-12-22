@@ -1,5 +1,6 @@
 export default interface BusSchedule {
   id: number,
-  route: string,
-  schedule: string
+  origem: string,
+  horario: string,
+  ativo: boolean
 };

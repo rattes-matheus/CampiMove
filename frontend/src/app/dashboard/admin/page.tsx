@@ -21,8 +21,6 @@ import {
     DialogClose,
 } from "@/components/ui/dialog";
 
-import { FileText, ArrowRight } from 'lucide-react';
-
 import { CalendarDays } from "lucide-react";
 
 import {
@@ -99,7 +97,7 @@ export default function AdminDashboardPage() {
             if (userRole === "STUDENT" || userRole === "TEACHER") return router.push("/dashboard");
             if (userRole === "DRIVER") return router.push("/dashboard/motorist");
 
-            axios.get<BusSchedule[]>("http://localhost:8080/api/routes")
+            axios.get<BusSchedule[]>("http://localhost:8080/horarios-onibus")
                 .then((res) => setSchedules(res.data))
                 .catch((err) => console.log("Erro ao buscar intercampis:", err.message));
         };
@@ -125,9 +123,9 @@ export default function AdminDashboardPage() {
         if (!token) return router.push("/login");
 
         if (newRoute && newTime) {
-            axios.post("http://localhost:8080/api/routes", {
-                route: newRoute,
-                schedule: newTime + ":00"
+            axios.post("http://localhost:8080/horarios-onibus", {
+                origem: newRoute,
+                horario: newTime
             }).then(() => {
                 toast({ title: 'Sucesso', description: 'Novo horário adicionado.' });
                 setModified(modified + 1);
@@ -146,7 +144,7 @@ export default function AdminDashboardPage() {
         const token = localStorage.getItem('jwt_token');
         if (!token) return router.push("/login");
 
-        axios.post("http://localhost:8080/api/routes/delete", { id })
+        axios.delete(`http://localhost:8080/horarios-onibus/${id}`)
             .then(() => {
                 toast({ title: 'Sucesso', description: 'Horário removido.' });
                 setModified(modified + 1);
@@ -355,7 +353,7 @@ export default function AdminDashboardPage() {
 
                                         <div className="grid gap-4 py-4">
                                             <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="route" className="text-right">Rota</Label>
+                                                <Label htmlFor="route" className="text-right">Origem</Label>
                                                 <Input id="route" value={newRoute} onChange={(e) => setNewRoute(e.target.value)} className="col-span-3" />
                                             </div>
 
@@ -385,8 +383,8 @@ export default function AdminDashboardPage() {
                                 <TableBody>
                                     {schedules.map(schedule => (
                                         <TableRow key={schedule.id}>
-                                            <TableCell>{schedule.route}</TableCell>
-                                            <TableCell>{schedule.schedule}</TableCell>
+                                            <TableCell>{schedule.origem}</TableCell>
+                                            <TableCell>{schedule.horario}</TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="icon" onClick={() => handleRemoveSchedule(schedule.id)}>
                                                     <Trash2 className="h-4 w-4 text-destructive" />

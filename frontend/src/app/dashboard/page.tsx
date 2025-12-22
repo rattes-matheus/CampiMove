@@ -97,7 +97,8 @@ export default function DashboardPage() {
     };
 
     useEffect(() => {
-        axios.get<BusSchedule[]>("http://localhost:8080/api/routes").then((res) => {
+        axios.get<BusSchedule[]>("http://localhost:8080/horarios-onibus").then((res) => {
+            console.log(res.data)
             setSchedules(res.data)
         }).catch((err: Error) => console.log("Can't GET the avaible intercampis : ", err.message));
         setCurrentMinutes(now.getHours() * 60 + now.getMinutes());
@@ -154,17 +155,17 @@ export default function DashboardPage() {
                                 schedules && schedules.length > 0 ?
                                     schedules
                                         .map(s => {
-                                            const [h, m, sec] = s.schedule.split(":").map(Number);
+                                            const [h, m, sec] = s.horario.split(":").map(Number);
                                             let minutes = h * 60 + m;
                                             if (minutes < currentMinutes)
                                                 minutes += 24 * 60;
                                             return {...s, diff: Math.abs(minutes - currentMinutes)};
                                         })
                                         .sort((a, b) => a.diff - b.diff)
-                                        .at(0)?.schedule :
+                                        .at(0)?.horario :
                                     "Sem Intercampi a caminho"
                             }</div>
-                            <p className="py-4 text-sm text-muted-foreground">{schedules.length > 0 ? "Trajeto " + schedules.sort((a, b) => a.schedule.localeCompare(b.schedule)).at(0)?.route : ""}</p>
+                            <p className="py-4 text-sm text-muted-foreground">{schedules.length > 0 ? "Trajeto " + schedules.sort((a, b) => a.horario.localeCompare(b.horario)).at(0)?.origem : ""}</p>
                         </CardContent>
                     </Card>
 
