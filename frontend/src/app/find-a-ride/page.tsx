@@ -189,7 +189,7 @@ function getRatingsMedium(motorist: string) {
 
 const filteredTransport = drivers.filter((option) => {
     const typeMatch = transportType === 'all' || option.transportType.toUpperCase() === transportType.toUpperCase();
-    const ratingMatch = option.rating >= minRating;
+    const ratingMatch = getRatingsMedium(option.motorist) >= minRating;
     return typeMatch && ratingMatch;
 });
 
