@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/campimove.iml" filepath="$PROJECT_DIR$/.idea/campimove.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/CampiMove.iml" filepath="$PROJECT_DIR$/.idea/CampiMove.iml" />
     </modules>
   </component>
 </project>

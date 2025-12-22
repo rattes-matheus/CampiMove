@@ -12,13 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-    DialogTrigger,
-    DialogClose,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 
 import { FileText, ArrowRight } from 'lucide-react';
@@ -48,18 +48,18 @@ type Notice = {
 
 
 type UserReport = {
-    id: number;
-    userid: number;
-    driverName: string;
-    report_text: string;
+  id: number;
+  userid: number;
+  driverName: string;
+  report_text: string;
 };
 
 type User = {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    active: boolean;
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
 };
 
 export default function AdminDashboardPage() {
@@ -688,9 +688,9 @@ export default function AdminDashboardPage() {
                         </CardContent>
                     </Card>
 
-                </div>
-            </main>
-            <Footer />
         </div>
-    );
+      </main>
+      <Footer />
+    </div>
+  );
 }

@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalTime;
 
 @Service
-@Transactional
 public class HorarioOnibusGestaoService {
     
     @Autowired
